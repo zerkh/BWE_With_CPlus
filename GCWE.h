@@ -12,18 +12,18 @@ class GCWE
 {
 public:
 	MatrixXd W1;
-	VectorXd b1;
+	RowVectorXd b1;
 	MatrixXd W2;
-	VectorXd b2;
+	RowVectorXd b2;
 	MatrixXd Wg1;
-	VectorXd bg1;
+	RowVectorXd bg1;
 	MatrixXd Wg2;
-	VectorXd bg2;
-	int word_dim, hidden_dim, window_size;
+	RowVectorXd bg2;
+	int word_dim, hidden_dim, window_size, neg_sample;
 
-	GCWE(int word_dim, int hidden_dim, int window_size);
+	GCWE(int word_dim, int hidden_dim, int window_size, int neg_sample);
 
-	int forward(WordVec word_vec, VectorXd x,  VectorXd x_g);
+	double forward(WordVec word_vec, RowVectorXi x,  RowVectorXd x_g);
 
-	void backward();
+	void backward(WordVec word_vec, RowVectorXi x, RowVectorXd x_g);
 };

@@ -13,5 +13,11 @@ public:
 	int word_dim;
 	int vocb_size;
 
-	WordVec(int word_dim, int vocb_size);
+	WordVec(int word_dim, int vocb_size)
+	{
+		this->word_dim = word_dim;
+		this->vocb_size = vocb_size;
+
+		word_emb = MatrixXd::Random(vocb_size, word_dim);
+	}
 };

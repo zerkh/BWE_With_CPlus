@@ -3,7 +3,7 @@
 #include "Eigen/Core"
 #include <iostream>
 
-VectorXd tanh(VectorXd v)
+RowVectorXd tanh(RowVectorXd v)
 {
 	VectorXd v_tanh(v.cols());
 
