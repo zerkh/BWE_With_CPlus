@@ -84,12 +84,12 @@ void GCWE::backward(WordVec word_vec, RowVectorXi x, RowVectorXi x_g)
 
 	//derivation items
 	MatrixXd s_dword_emb = MatrixXd::Zero(word_vec.word_emb.rows(), word_vec.word_emb.cols());
-	MatrixXd s_dW2;
-	MatrixXd s_dW1;
-	RowVectorXd s_db1;
-	MatrixXd s_dWg2;
-	MatrixXd s_dWg1;
-	RowVectorXd s_dbg1;
+	MatrixXd s_dW2 = MatrixXd::Zero(W2.rows(), W2.cols());
+	MatrixXd s_dW1 = MatrixXd::Zero(W1.rows(), W1.cols());;
+	RowVectorXd s_db1 = RowVectorXd::Zero(b1.cols());
+	MatrixXd s_dWg2 = MatrixXd::Zero(Wg2.rows(), Wg2.cols());;
+	MatrixXd s_dWg1 = MatrixXd::Zero(Wg1.rows(), Wg1.cols());;
+	RowVectorXd s_dbg1 = RowVectorXd::Zero(bg1.cols());;
 
 	srand(time(0));
 
