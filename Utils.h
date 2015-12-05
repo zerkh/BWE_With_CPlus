@@ -3,7 +3,7 @@
 #include "Eigen/Core"
 #include <iostream>
 
-RowVectorXd tanh(RowVectorXd v)
+inline RowVectorXd tanh(RowVectorXd v)
 {
 	RowVectorXd v_tanh(v.cols());
 
@@ -15,19 +15,7 @@ RowVectorXd tanh(RowVectorXd v)
 	return v_tanh;
 }
 
-RowVectorXd derTanh(RowVectorXd v)
-{
-	RowVectorXd v_derTanh = mulByElem(v, v);
-
-	for (int i = 0; i < v.cols(); i++)
-	{
-		v_derTanh(i) = 1 - v_derTanh(i);
-	}
-
-	return v_derTanh;
-}
-
-MatrixXd mulByElem(MatrixXd m1, MatrixXd m2)
+inline MatrixXd mulByElem(MatrixXd m1, MatrixXd m2)
 {
 	MatrixXd m(m1.rows(), m1.cols());
 
@@ -41,3 +29,16 @@ MatrixXd mulByElem(MatrixXd m1, MatrixXd m2)
 
 	return m;
 }
+
+inline RowVectorXd derTanh(RowVectorXd v)
+{
+	RowVectorXd v_derTanh = mulByElem(v, v);
+
+	for (int i = 0; i < v.cols(); i++)
+	{
+		v_derTanh(i) = 1 - v_derTanh(i);
+	}
+
+	return v_derTanh;
+}
+

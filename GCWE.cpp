@@ -22,10 +22,10 @@ GCWE::GCWE(int word_dim, int hidden_dim, int window_size, int neg_sample)
 	Wg2 = MatrixXd::Random(hidden_dim, 1);
 	bg2 = RowVectorXd::Zero(1);
 
-	RowVectorXd input_layer = RowVectorXd(window_size*word_dim);
-	RowVectorXd hidden_layer = RowVectorXd(hidden_dim);
-	RowVectorXd global_input_layer = RowVectorXd(2 * word_dim);
-	RowVectorXd global_hidden_layer = RowVectorXd(hidden_dim);
+	input_layer = RowVectorXd(window_size*word_dim);
+	hidden_layer = RowVectorXd(hidden_dim);
+	global_input_layer = RowVectorXd(2 * word_dim);
+	global_hidden_layer = RowVectorXd(hidden_dim);
 }
 
 double GCWE::forward(WordVec word_vec, RowVectorXi x, RowVectorXi x_g)
@@ -123,11 +123,12 @@ void GCWE::backward(WordVec word_vec, RowVectorXi x, RowVectorXi x_g)
 		
 		for (int i = 0; i < window_size - 1; i++)
 		{
-			dword_emb.row(x[i]) += dpos_input_layer.segment(i*word_dim, (i + 1)*word_dim-1);
-			dword_emb.row(x[i]) += dneg_input_layer.segment(i*word_dim, (i + 1)*word_dim - 1);
+			dword_emb.row(x[i]) += dpos_input_layer.segment(i*word_dim, word_dim);
+			dword_emb.row(x[i]) += dneg_input_layer.segment(i*word_dim, word_dim);
 		}
-		dword_emb.row(x[window_size-1]) += dpos_input_layer.segment((window_size-1)*word_dim, (window_size)*word_dim - 1);
-		dword_emb.row(neg_word) += dneg_input_layer.segment((window_size - 1)*word_dim, (window_size)*word_dim - 1);
+
+		dword_emb.row(x[window_size-1]) += dpos_input_layer.segment((window_size-1)*word_dim, word_dim);
+		dword_emb.row(neg_word) += dneg_input_layer.segment((window_size - 1)*word_dim, word_dim);
 
 		//derivation for global network
 		dWg2 = neg_global_hidden_layer - pos_global_hidden_layer;
@@ -141,13 +142,13 @@ void GCWE::backward(WordVec word_vec, RowVectorXi x, RowVectorXi x_g)
 		RowVectorXd dpos_global_input_layer = (Wg1 * mulByElem(-1 * Wg2.transpose(), derTanh(pos_global_hidden_layer)).transpose()).transpose();
 		RowVectorXd dneg_global_input_layer = (Wg1 * mulByElem(Wg2.transpose(), derTanh(neg_global_hidden_layer)).transpose()).transpose();
 
-		dword_emb.row(x[window_size - 1]) += dpos_global_input_layer.segment(0, word_dim - 1);
-		dword_emb.row(neg_word) += dneg_global_input_layer.segment(0, word_dim - 1);
+		dword_emb.row(x[window_size - 1]) += dpos_global_input_layer.segment(0, word_dim);
+		dword_emb.row(neg_word) += dneg_global_input_layer.segment(0, word_dim);
 
 		for (int i = 0; i < x_g.cols(); i++)
 		{
-			dword_emb.row(x_g(i)) += (dpos_global_input_layer.segment(word_dim, word_dim * 2 - 1)*word_vec.m_id_idf[x_g(i)]/sum_of_idf);
-			dword_emb.row(x_g(i)) += (dneg_global_input_layer.segment(word_dim, word_dim * 2 - 1)*word_vec.m_id_idf[x_g(i)] / sum_of_idf);
+			dword_emb.row(x_g(i)) += (dpos_global_input_layer.segment(word_dim, word_dim)*word_vec.m_id_idf[x_g(i)]/sum_of_idf);
+			dword_emb.row(x_g(i)) += (dneg_global_input_layer.segment(word_dim, word_dim)*word_vec.m_id_idf[x_g(i)] / sum_of_idf);
 		}
 	}
 
@@ -171,7 +172,7 @@ int main()
 		x(i) = i;
 	}
 
-	RowVectorXi x_g = RowVectorXi::Random();
+	RowVectorXi x_g = x;
 
 	gcwe_model.backward(word_vec, x, x_g);
 
