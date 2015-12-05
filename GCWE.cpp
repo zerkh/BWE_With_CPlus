@@ -83,13 +83,13 @@ void GCWE::backward(WordVec word_vec, RowVectorXi x, RowVectorXi x_g)
 	}
 
 	//derivation items
-	MatrixXd dword_emb = MatrixXd::Zero(word_vec.word_emb.rows(), word_vec.word_emb.cols());
-	MatrixXd dW2;
-	MatrixXd dW1;
-	RowVectorXd db1;
-	MatrixXd dWg2;
-	MatrixXd dWg1;
-	RowVectorXd dbg1;
+	MatrixXd s_dword_emb = MatrixXd::Zero(word_vec.word_emb.rows(), word_vec.word_emb.cols());
+	MatrixXd s_dW2;
+	MatrixXd s_dW1;
+	RowVectorXd s_db1;
+	MatrixXd s_dWg2;
+	MatrixXd s_dWg1;
+	RowVectorXd s_dbg1;
 
 	srand(time(0));
 
@@ -99,6 +99,7 @@ void GCWE::backward(WordVec word_vec, RowVectorXi x, RowVectorXi x_g)
 
 		RowVectorXi neg_seq = x;
 		neg_seq(window_size-1) = neg_word;
+		MatrixXd dword_emb = MatrixXd::Zero(word_vec.word_emb.rows(), word_vec.word_emb.cols());
 
 		double neg_score = forward(word_vec, neg_seq, x_g);
 
@@ -110,12 +111,12 @@ void GCWE::backward(WordVec word_vec, RowVectorXi x, RowVectorXi x_g)
 		double f_error = (1-pos_score+neg_score > 0)?(1-pos_score+neg_score):0;
 
 		//derivation for local network
-		dW2 = neg_hidden_layer - pos_hidden_layer;
+		MatrixXd dW2 = neg_hidden_layer - pos_hidden_layer;
 
-		dW1 = pos_input_layer.transpose() * mulByElem(-1 * W2.transpose(), derTanh(pos_hidden_layer)) +
+		MatrixXd dW1 = pos_input_layer.transpose() * mulByElem(-1 * W2.transpose(), derTanh(pos_hidden_layer)) +
 			neg_input_layer.transpose() * mulByElem(W2.transpose(), derTanh(neg_hidden_layer));
 
-		db1 = mulByElem(-1 * W2.transpose(), derTanh(pos_hidden_layer)) +
+		RowVectorXd db1 = mulByElem(-1 * W2.transpose(), derTanh(pos_hidden_layer)) +
 			mulByElem(W2.transpose(), derTanh(neg_hidden_layer));
 
 		RowVectorXd dpos_input_layer = (W1 * mulByElem(-1 * W2.transpose(), derTanh(pos_hidden_layer)).transpose()).transpose();
@@ -131,12 +132,12 @@ void GCWE::backward(WordVec word_vec, RowVectorXi x, RowVectorXi x_g)
 		dword_emb.row(neg_word) += dneg_input_layer.segment((window_size - 1)*word_dim, word_dim);
 
 		//derivation for global network
-		dWg2 = neg_global_hidden_layer - pos_global_hidden_layer;
+		MatrixXd dWg2 = neg_global_hidden_layer - pos_global_hidden_layer;
 
-		dWg1 = pos_global_input_layer.transpose() * mulByElem(-1 * Wg2.transpose(), derTanh(pos_global_hidden_layer)) +
+		MatrixXd dWg1 = pos_global_input_layer.transpose() * mulByElem(-1 * Wg2.transpose(), derTanh(pos_global_hidden_layer)) +
 			neg_global_input_layer.transpose() * mulByElem(Wg2.transpose(), derTanh(neg_global_hidden_layer));
 
-		dbg1 = mulByElem(-1 * Wg2.transpose(), derTanh(pos_global_hidden_layer)) +
+		RowVectorXd dbg1 = mulByElem(-1 * Wg2.transpose(), derTanh(pos_global_hidden_layer)) +
 			mulByElem(Wg2.transpose(), derTanh(neg_global_hidden_layer));
 
 		RowVectorXd dpos_global_input_layer = (Wg1 * mulByElem(-1 * Wg2.transpose(), derTanh(pos_global_hidden_layer)).transpose()).transpose();
@@ -150,15 +151,23 @@ void GCWE::backward(WordVec word_vec, RowVectorXi x, RowVectorXi x_g)
 			dword_emb.row(x_g(i)) += (dpos_global_input_layer.segment(word_dim, word_dim)*word_vec.m_id_idf[x_g(i)]/sum_of_idf);
 			dword_emb.row(x_g(i)) += (dneg_global_input_layer.segment(word_dim, word_dim)*word_vec.m_id_idf[x_g(i)] / sum_of_idf);
 		}
+
+		s_dword_emb += dword_emb;
+		s_dW1 += dW1;
+		s_db1 += db1;
+		s_dW2 += dW2;
+		s_dWg1 += dWg1;
+		s_dbg1 += dbg1;
+		s_dWg2 += dWg2;
 	}
 
-	word_vec.word_emb += dword_emb;
-	W1 += dW1;
-	b1 += db1;
-	W2 += dW2;
-	Wg1 += dWg1;
-	bg1 += dbg1;
-	Wg2 += dWg2;
+	word_vec.word_emb += s_dword_emb;
+	W1 += s_dW1;
+	b1 += s_db1;
+	W2 += s_dW2;
+	Wg1 += s_dWg1;
+	bg1 += s_dbg1;
+	Wg2 += s_dWg2;
 }
 
 int main()
