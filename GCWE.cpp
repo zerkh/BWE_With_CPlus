@@ -85,15 +85,15 @@ void GCWE::backward(WordVec word_vec, RowVectorXi x, RowVectorXi x_g)
 	//derivation items
 	MatrixXd s_dword_emb = MatrixXd::Zero(word_vec.word_emb.rows(), word_vec.word_emb.cols());
 	MatrixXd s_dW2 = MatrixXd::Zero(W2.rows(), W2.cols());
-	MatrixXd s_dW1 = MatrixXd::Zero(W1.rows(), W1.cols());;
+	MatrixXd s_dW1 = MatrixXd::Zero(W1.rows(), W1.cols());
 	RowVectorXd s_db1 = RowVectorXd::Zero(b1.cols());
-	MatrixXd s_dWg2 = MatrixXd::Zero(Wg2.rows(), Wg2.cols());;
-	MatrixXd s_dWg1 = MatrixXd::Zero(Wg1.rows(), Wg1.cols());;
-	RowVectorXd s_dbg1 = RowVectorXd::Zero(bg1.cols());;
+	MatrixXd s_dWg2 = MatrixXd::Zero(Wg2.rows(), Wg2.cols());
+	MatrixXd s_dWg1 = MatrixXd::Zero(Wg1.rows(), Wg1.cols());
+	RowVectorXd s_dbg1 = RowVectorXd::Zero(bg1.cols());
 
 	srand(time(0));
 
-	for(int i = 0; i < neg_sample; i++)
+	for(int epoch = 0; epoch < neg_sample; epoch++)
 	{
 		int neg_word = rand()%word_vec.vocb_size;
 
@@ -111,7 +111,7 @@ void GCWE::backward(WordVec word_vec, RowVectorXi x, RowVectorXi x_g)
 		double f_error = (1-pos_score+neg_score > 0)?(1-pos_score+neg_score):0;
 
 		//derivation for local network
-		MatrixXd dW2 = neg_hidden_layer - pos_hidden_layer;
+		MatrixXd dW2 = neg_hidden_layer.transpose() - pos_hidden_layer.transpose();
 
 		MatrixXd dW1 = pos_input_layer.transpose() * mulByElem(-1 * W2.transpose(), derTanh(pos_hidden_layer)) +
 			neg_input_layer.transpose() * mulByElem(W2.transpose(), derTanh(neg_hidden_layer));
@@ -132,7 +132,7 @@ void GCWE::backward(WordVec word_vec, RowVectorXi x, RowVectorXi x_g)
 		dword_emb.row(neg_word) += dneg_input_layer.segment((window_size - 1)*word_dim, word_dim);
 
 		//derivation for global network
-		MatrixXd dWg2 = neg_global_hidden_layer - pos_global_hidden_layer;
+		MatrixXd dWg2 = neg_global_hidden_layer.transpose() - pos_global_hidden_layer.transpose();
 
 		MatrixXd dWg1 = pos_global_input_layer.transpose() * mulByElem(-1 * Wg2.transpose(), derTanh(pos_global_hidden_layer)) +
 			neg_global_input_layer.transpose() * mulByElem(Wg2.transpose(), derTanh(neg_global_hidden_layer));
@@ -183,7 +183,15 @@ int main()
 
 	RowVectorXi x_g = x;
 
+	RowVectorXi x_neg = x;
+	x_neg(4) = 0;
+	cout << gcwe_model.forward(word_vec, x, x_g) << endl;
+	cout << gcwe_model.forward(word_vec, x_neg, x_g) << endl;
+	
 	gcwe_model.backward(word_vec, x, x_g);
+
+	cout << gcwe_model.forward(word_vec, x, x_g) << endl;
+	cout << gcwe_model.forward(word_vec, x_neg, x_g) << endl;
 
 	return 0;
 }
