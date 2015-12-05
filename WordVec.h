@@ -10,6 +10,7 @@ class WordVec
 public:
 	MatrixXd word_emb;
 	map<string, int> m_word_id;
+	map<int, double> m_id_idf;
 	int word_dim;
 	int vocb_size;
 
