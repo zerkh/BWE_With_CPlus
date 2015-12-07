@@ -29,6 +29,26 @@ inline string strip_str(const string& s, const string chs = " \t\n")
 	return i >= j ? "" : s.substr(i, j - i);
 };
 
+inline string to_string(int i)
+{
+	vector<char> pos;
+	while (i / 10 != 0)
+	{
+		pos.push_back(i % 10 + '0');
+		i /= 10;
+	}
+	pos.push_back(i + '0');
+
+	string str = "";
+
+	for (int i = pos.size() - 1; i >= 0; i--)
+	{
+		str += pos[i];
+	}
+
+	return str;
+}
+
 inline RowVectorXd tanh(RowVectorXd v)
 {
 	RowVectorXd v_tanh(v.cols());

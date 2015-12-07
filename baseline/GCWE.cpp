@@ -308,7 +308,7 @@ int main()
 	int hidden_dim = atoi(conf.get_para("hidden_dim").c_str());
 	int window_size = atoi(conf.get_para("window_size").c_str());
 	int neg_sample = atoi(conf.get_para("neg_sample").c_str());
-	double learning_rate = stod(conf.get_para("learning_rate"));
+	double learning_rate = atof(conf.get_para("learning_rate").c_str());
 	int epoch = atoi(conf.get_para("epoch").c_str());
 	int branch_size = atoi(conf.get_para("branch_size").c_str());
 

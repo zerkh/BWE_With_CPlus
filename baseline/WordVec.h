@@ -120,8 +120,11 @@ public:
 		time_t t = time(0);
 
 		struct tm* now = localtime(&t);
+		string mon = string(itoa(now->tm_mon + 1));
+		string day = string(itoa(now->tm_mday));
+		string hour = string(itoa(now->tm_hour));
 
-		string filename = output_dir + to_string(now->tm_mon + 1) + "-" + to_string(now->tm_mday) + "-" + to_string(now->tm_hour) + "-src.vec";
+		string filename = output_dir + mon + "-" + day + "-" + hour + "-src.vec";
 	
 		ofstream out(filename.c_str(), ios::out);
 
