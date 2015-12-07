@@ -110,7 +110,7 @@ public:
 
 			for (int i = 0; i < word_dim; i++)
 			{
-				word_emb(cur_id, i) = stod(word_vec[i + 1]);
+				word_emb(cur_id, i) = atof(word_vec[i + 1].c_str());
 			}
 		}
 	}
@@ -120,9 +120,9 @@ public:
 		time_t t = time(0);
 
 		struct tm* now = localtime(&t);
-		string mon = string(itoa(now->tm_mon + 1));
-		string day = string(itoa(now->tm_mday));
-		string hour = string(itoa(now->tm_hour));
+		string mon = to_string(now->tm_mon + 1);
+		string day = to_string(now->tm_mday);
+		string hour = to_string(now->tm_hour);
 
 		string filename = output_dir + mon + "-" + day + "-" + hour + "-src.vec";
 	

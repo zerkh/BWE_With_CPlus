@@ -1,5 +1,5 @@
 #pragma once
-#include "Eigen/Core"
+#include "Eigen/Dense"
 #include "WordVec.h"
 #include <iostream>
 using namespace std;

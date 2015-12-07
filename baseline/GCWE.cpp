@@ -1,4 +1,3 @@
-#include "Eigen/Dense"
 #include "GCWE.h"
 #include "Utils.h"
 #include "Config.h"
@@ -182,7 +181,7 @@ vector<MatrixXd> GCWE::backward(WordVec& word_vec, RowVectorXi x, RowVectorXi x_
 	return derivations;
 }
 
-RowVectorXd getWindow(WordVec word_vec, string sentence, int window_size, int word_pos)
+RowVectorXi getWindow(WordVec word_vec, string sentence, int window_size, int word_pos)
 {
 	vector<string> words = splitBySpace(sentence);
 	vector<int> pos_of_word;
@@ -197,7 +196,7 @@ RowVectorXd getWindow(WordVec word_vec, string sentence, int window_size, int wo
 		pos_of_word.push_back(word_vec.m_word_id[words[w]]);
 	}
 
-	RowVectorXd window(window_size);
+	RowVectorXi window(window_size);
 	for (int i = word_pos; i < window_size + word_pos; i++)
 	{
 		window(i - word_pos) = pos_of_word[i];
@@ -208,6 +207,7 @@ RowVectorXd getWindow(WordVec word_vec, string sentence, int window_size, int wo
 
 void trainOneSentence(GCWE& gcwe_model, WordVec& word_vec, string sentence, int window_size, double learning_rate)
 {
+
 	//derivation items
 	MatrixXd s_dword_emb = MatrixXd::Zero(word_vec.word_emb.rows(), word_vec.word_emb.cols());
 	MatrixXd s_dW2 = MatrixXd::Zero(gcwe_model.W2.rows(), gcwe_model.W2.cols());
@@ -228,7 +228,7 @@ void trainOneSentence(GCWE& gcwe_model, WordVec& word_vec, string sentence, int 
 	}
 
 	//get global context
-	RowVectorXd x_g(words.size());
+	RowVectorXi x_g(words.size());
 	for (int i = 0; i < words.size(); i++)
 	{
 		x_g(i) = pos_of_word[i];
@@ -237,7 +237,7 @@ void trainOneSentence(GCWE& gcwe_model, WordVec& word_vec, string sentence, int 
 	//train one sentence
 	for (int w = 0; w < words.size(); w++)
 	{
-		RowVectorXd x = getWindow(word_vec, sentence, window_size, w);
+		RowVectorXi x = getWindow(word_vec, sentence, window_size, w);
 
 		vector<MatrixXd> derivations = gcwe_model.backward(word_vec, x, x_g);
 
@@ -270,6 +270,11 @@ void trainOneSentence(GCWE& gcwe_model, WordVec& word_vec, string sentence, int 
 void train(GCWE& gcwe_model, WordVec& word_vec, string src_raw_file, double learning_rate, int epoch, int branch_size, int window_size)
 {
 	ifstream src_raw_in(src_raw_file.c_str(), ios::in);
+	if (!src_raw_in)
+	{
+		cout << "Cannot open " << src_raw_file << endl;
+	}
+
 
 	cout << "Init idf table..." << endl;
 	word_vec.init_idf(src_raw_file);
@@ -291,6 +296,7 @@ void train(GCWE& gcwe_model, WordVec& word_vec, string src_raw_file, double lear
 		{
 			int cur_sen = rand() % sentences.size();
 
+			cout << "Training sentence " << cur_sen << "......" << endl;
 			trainOneSentence(gcwe_model, word_vec, sentences[cur_sen], window_size, learning_rate);
 		}
 		cout << "Epoch " << e << "complete!" << endl;
