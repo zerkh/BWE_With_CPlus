@@ -27,6 +27,8 @@ public:
 
 	int word_dim, hidden_dim, window_size, neg_sample;
 
+	GCWE() {};
+
 	GCWE(int word_dim, int hidden_dim, int window_size, int neg_sample);
 
 	double forward(WordVec& word_vec, RowVectorXi x,  RowVectorXi x_g);

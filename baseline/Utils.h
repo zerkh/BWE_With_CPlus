@@ -5,6 +5,7 @@
 #include <vector>
 #include <sstream>
 #include <string>
+#include <pthread.h>
 using namespace std;
 using namespace Eigen;
 

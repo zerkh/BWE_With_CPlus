@@ -1,6 +1,7 @@
 #include "GCWE.h"
 #include "Utils.h"
 #include "Config.h"
+#include "ThreadPara.h"
 #include <iostream>
 using namespace std;
 using namespace Eigen;
@@ -181,6 +182,29 @@ vector<MatrixXd> GCWE::backward(WordVec& word_vec, RowVectorXi x, RowVectorXi x_
 	return derivations;
 }
 
+static void* deepThread(void* arg)
+{
+	GCWEThread& gt = (GCWEThread&)arg;
+
+	srand(time(0));
+	for (int b = 0; b < gt.batch_size; b++)
+	{
+		int cur_sen = rand() / gt.sentences.size();
+
+		vector<MatrixXd> derivations = trainOneSentence(*gt.gcwe_model, *gt.word_vec, gt.sentences[cur_sen], gt.window_size, gt.learning_rate);
+
+		gt.dword_emb += derivations[0];
+		gt.dW1 += derivations[1];
+		gt.db1 += derivations[2];
+		gt.dW2 += derivations[3];
+		gt.dWg1 += derivations[4];
+		gt.dbg1 += derivations[5];
+		gt.dWg2 += derivations[6];
+	}
+
+	pthread_exit(NULL);
+}
+
 RowVectorXi getWindow(WordVec word_vec, string sentence, int window_size, int word_pos)
 {
 	vector<string> words = splitBySpace(sentence);
@@ -205,7 +229,7 @@ RowVectorXi getWindow(WordVec word_vec, string sentence, int window_size, int wo
 	return window;
 }
 
-void trainOneSentence(GCWE& gcwe_model, WordVec& word_vec, string sentence, int window_size, double learning_rate)
+vector<MatrixXd> trainOneSentence(GCWE& gcwe_model, WordVec& word_vec, string sentence, int window_size, double learning_rate)
 {
 
 	//derivation items
@@ -258,27 +282,44 @@ void trainOneSentence(GCWE& gcwe_model, WordVec& word_vec, string sentence, int 
 	s_dbg1 /= words.size();
 	s_dWg2 /= words.size();
 
-	word_vec.word_emb += (s_dword_emb*learning_rate);
+	/*word_vec.word_emb += (s_dword_emb*learning_rate);
 	gcwe_model.W1 += (s_dW1*learning_rate);
 	gcwe_model.b1 += (s_db1*learning_rate);
 	gcwe_model.W2 += (s_dW2*learning_rate);
 	gcwe_model.Wg1 += (s_dWg1*learning_rate);
 	gcwe_model.bg1 += (s_dbg1*learning_rate);
-	gcwe_model.Wg2 += (s_dWg2*learning_rate);
+	gcwe_model.Wg2 += (s_dWg2*learning_rate);*/
+
+	vector<MatrixXd> derivations;
+	derivations.push_back(s_dword_emb);
+	derivations.push_back(s_dW1);
+	derivations.push_back(s_db1);
+	derivations.push_back(s_dW2);
+	derivations.push_back(s_dWg1);
+	derivations.push_back(s_dbg1);
+	derivations.push_back(s_dWg2);
+
+	return derivations;
 }
 
-void train(GCWE& gcwe_model, WordVec& word_vec, string src_raw_file, double learning_rate, int epoch, int branch_size, int window_size)
+void train(Config conf, GCWE& gcwe_model, WordVec& word_vec, string src_raw_file, double learning_rate, int epoch, int branch_size, int window_size)
 {
 	ifstream src_raw_in(src_raw_file.c_str(), ios::in);
 	if (!src_raw_in)
 	{
 		cout << "Cannot open " << src_raw_file << endl;
+		exit(0);
 	}
 
+	int thread_num = atoi(conf.get_para("thread_num").c_str());
+	double start_clock, end_clock;
+	pthread_t* pt = new pthread_t[thread_num];
 
 	cout << "Init idf table..." << endl;
+	start_clock = clock();
 	word_vec.init_idf(src_raw_file);
-	cout << "Complete to init idf table!" << endl;
+	end_clock = clock();
+	cout << "Complete to init idf table!" << "The cost of time is " << (end_clock-start_clock)/CLOCKS_PER_SEC << endl;
 
 	string sentence;
 	vector<string> sentences;
@@ -288,19 +329,77 @@ void train(GCWE& gcwe_model, WordVec& word_vec, string src_raw_file, double lear
 		sentences.push_back(sentence);
 	}
 
-	srand(time(0));
+	//init multi-thread information
+	int sentence_branch = branch_size / thread_num;
+	int sentence_per_thread = sentences.size() / thread_num;
+	int ind = 0;
+	GCWEThread* threadpara = new GCWEThread[thread_num];
+	for (int i = 0; i < thread_num-1; i++)
+	{
+		threadpara[i].init(gcwe_model, word_vec, word_vec.word_dim, gcwe_model.hidden_dim, window_size, learning_rate);
+		for (int i = ind; i < ind + sentence_per_thread; i++)
+		{
+			threadpara[i].sentences.push_back(sentences[i]);
+		}
+		ind += sentence_per_thread;
+	}
+	threadpara[thread_num - 1].init(gcwe_model, word_vec, word_vec.word_dim, gcwe_model.hidden_dim, window_size, learning_rate);
+	threadpara[thread_num - 1].batch_size = branch_size - thread_num*sentence_branch;
+	for (int i = ind; i < sentences.size(); i++)
+	{
+		threadpara[thread_num - 1].sentences.push_back(sentences[i]);
+	}
+
 	for (int e = 0; e < epoch; e++)
 	{
 		cout << "Start training epoch " << e + 1 << endl;
-		for (int b = 0; b < branch_size; b++)
+		for (int t = 0; t < thread_num; t++)
 		{
-			int cur_sen = rand() % sentences.size();
-
-			cout << "Training sentence " << cur_sen << "......" << endl;
-			trainOneSentence(gcwe_model, word_vec, sentences[cur_sen], window_size, learning_rate);
+			pthread_create(&pt[t], NULL, deepThread, (void *)(threadpara + t));
 		}
+		for (int t = 0; t < thread_num; t++)
+		{
+			pthread_join(pt[t], NULL);
+		}
+
+		//update
+		MatrixXd s_dword_emb = MatrixXd::Zero(word_vec.word_emb.rows(), word_vec.word_emb.cols());
+		MatrixXd s_dW2 = MatrixXd::Zero(gcwe_model.W2.rows(), gcwe_model.W2.cols());
+		MatrixXd s_dW1 = MatrixXd::Zero(gcwe_model.W1.rows(), gcwe_model.W1.cols());
+		RowVectorXd s_db1 = RowVectorXd::Zero(gcwe_model.b1.cols());
+		MatrixXd s_dWg2 = MatrixXd::Zero(gcwe_model.Wg2.rows(), gcwe_model.Wg2.cols());
+		MatrixXd s_dWg1 = MatrixXd::Zero(gcwe_model.Wg1.rows(), gcwe_model.Wg1.cols());
+		RowVectorXd s_dbg1 = RowVectorXd::Zero(gcwe_model.bg1.cols());
+
+		for (int t = 0; t < thread_num; t++)
+		{
+			s_dword_emb += threadpara[t].dword_emb;
+
+			s_dW1 += threadpara[t].dW1;
+			s_db1 += threadpara[t].db1;
+			s_dW2 += threadpara[t].dW2;
+
+			s_dWg1 += threadpara[t].dWg1;
+			s_dbg1 += threadpara[t].dbg1;
+			s_dWg2 += threadpara[t].dWg2;
+
+			threadpara[t].clear();
+		}
+
+		word_vec.word_emb += (learning_rate*s_dword_emb / branch_size);
+
+		gcwe_model.W1 += (learning_rate*s_dW1 / branch_size);
+		gcwe_model.b1 += (learning_rate*s_db1 / branch_size);
+		gcwe_model.W2 += (learning_rate*s_dW2 / branch_size);
+		gcwe_model.Wg1 += (learning_rate*s_dWg1 / branch_size);
+		gcwe_model.bg1 += (learning_rate*s_dbg1 / branch_size);
+		gcwe_model.Wg2 += (learning_rate*s_dWg2 / branch_size);
+
 		cout << "Epoch " << e << "complete!" << endl;
 	}
+
+	delete threadpara;
+	delete pt;
 }
 
 int main()
@@ -330,7 +429,7 @@ int main()
 	//training
 	cout << "Start training......" << endl;
 	start_clock = clock();
-	train(gcwe_model, src_word_vec, src_raw_file, learning_rate, epoch, branch_size, window_size);
+	train(conf, gcwe_model, src_word_vec, src_raw_file, learning_rate, epoch, branch_size, window_size);
 	end_clock = clock();
 	cout << "Complete to train word vectors! The cost of time is " << (end_clock - start_clock) / CLOCKS_PER_SEC << endl;
 
