@@ -54,6 +54,8 @@ public:
 			m_word_id[components[1]] = cur_id;
 			m_id_word[cur_id] = components[1];
 		}
+
+		in.close();
 	}
 
 	//need raw corpus	
@@ -80,6 +82,8 @@ public:
 
 			v_id_idf[w] = sentences.size() / v_id_idf[w];
 		}
+
+		in.close();
 	}
 
 	void loadWordVec(string filename)
@@ -134,7 +138,7 @@ public:
 		{
 			out << m_id_word[row] << " ";
 
-			for (int col = 0; col < vocb_size; col++)
+			for (int col = 0; col < word_dim; col++)
 			{
 				if (col != vocb_size - 1)
 				{

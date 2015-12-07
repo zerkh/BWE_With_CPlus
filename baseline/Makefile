@@ -21,7 +21,7 @@ OGCWE = GCWE.o
 # Link all Object Files with external Libraries into Binaries
 $(EXE): $(OBJ)
 	echo linking...
-	$(CC) $(CFLAGS) $(OGCWE) -o $(EXE) -lz
+	$(CC) $(CFLAGS) $(OGCWE) -o $(EXE) -lz -lpthread
 
 .PHONY: clean
 clean:
