@@ -1,6 +1,8 @@
 #pragma once
 #include "Eigen/Dense"
 #include "WordVec.h"
+#include "Utils.h"
+#include "Config.h"
 #include <iostream>
 using namespace std;
 using namespace Eigen;
