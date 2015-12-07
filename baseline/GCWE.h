@@ -35,3 +35,10 @@ public:
 
 	vector<MatrixXd> backward(WordVec& word_vec, RowVectorXi x, RowVectorXi x_g);
 };
+
+void train(Config conf, GCWE& gcwe_model, WordVec& word_vec, string src_raw_file, double learning_rate, int epoch, int branch_size, int window_size);
+
+vector<MatrixXd> trainOneSentence(GCWE& gcwe_model, WordVec& word_vec, string sentence, int window_size, double learning_rate);
+
+RowVectorXi getWindow(WordVec word_vec, string sentence, int window_size, int word_pos);
+
