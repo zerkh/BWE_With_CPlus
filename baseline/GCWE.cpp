@@ -182,20 +182,158 @@ vector<MatrixXd> GCWE::backward(WordVec& word_vec, RowVectorXi x, RowVectorXi x_
 	return derivations;
 }
 
+RowVectorXd getWindow(WordVec word_vec, string sentence, int window_size, int word_pos)
+{
+	vector<string> words = splitBySpace(sentence);
+	vector<int> pos_of_word;
+
+	for (int i = 0; i < window_size - 1; i++)
+	{
+		pos_of_word.push_back(0);
+	}
+
+	for (int w = 0; w < words.size(); w++)
+	{
+		pos_of_word.push_back(word_vec.m_word_id[words[w]]);
+	}
+
+	RowVectorXd window(window_size);
+	for (int i = word_pos; i < window_size + word_pos; i++)
+	{
+		window(i - word_pos) = pos_of_word[i];
+	}
+
+	return window;
+}
+
+void trainOneSentence(GCWE& gcwe_model, WordVec& word_vec, string sentence, int window_size, double learning_rate)
+{
+	//derivation items
+	MatrixXd s_dword_emb = MatrixXd::Zero(word_vec.word_emb.rows(), word_vec.word_emb.cols());
+	MatrixXd s_dW2 = MatrixXd::Zero(gcwe_model.W2.rows(), gcwe_model.W2.cols());
+	MatrixXd s_dW1 = MatrixXd::Zero(gcwe_model.W1.rows(), gcwe_model.W1.cols());
+	RowVectorXd s_db1 = RowVectorXd::Zero(gcwe_model.b1.cols());
+	MatrixXd s_dWg2 = MatrixXd::Zero(gcwe_model.Wg2.rows(), gcwe_model.Wg2.cols());
+	MatrixXd s_dWg1 = MatrixXd::Zero(gcwe_model.Wg1.rows(), gcwe_model.Wg1.cols());
+	RowVectorXd s_dbg1 = RowVectorXd::Zero(gcwe_model.bg1.cols());
+
+
+	vector<string> words = splitBySpace(sentence);
+
+	vector<int> pos_of_word;
+
+	for (int w = 0; w < words.size(); w++)
+	{
+		pos_of_word.push_back(word_vec.m_word_id[words[w]]);
+	}
+
+	//get global context
+	RowVectorXd x_g(words.size());
+	for (int i = 0; i < words.size(); i++)
+	{
+		x_g(i) = pos_of_word[i];
+	}
+
+	//train one sentence
+	for (int w = 0; w < words.size(); w++)
+	{
+		RowVectorXd x = getWindow(word_vec, sentence, window_size, w);
+
+		vector<MatrixXd> derivations = gcwe_model.backward(word_vec, x, x_g);
+
+		s_dword_emb += derivations[0];
+		s_dW1 += derivations[1];
+		s_db1 += derivations[2];
+		s_dW2 += derivations[3];
+		s_dWg1 += derivations[4];
+		s_dbg1 += derivations[5];
+		s_dWg2 += derivations[6];
+	}
+
+	s_dword_emb /= words.size();
+	s_dW1 /= words.size();
+	s_db1 /= words.size();
+	s_dW2 /= words.size();
+	s_dWg1 /= words.size();
+	s_dbg1 /= words.size();
+	s_dWg2 /= words.size();
+
+	word_vec.word_emb += (s_dword_emb*learning_rate);
+	gcwe_model.W1 += (s_dW1*learning_rate);
+	gcwe_model.b1 += (s_db1*learning_rate);
+	gcwe_model.W2 += (s_dW2*learning_rate);
+	gcwe_model.Wg1 += (s_dWg1*learning_rate);
+	gcwe_model.bg1 += (s_dbg1*learning_rate);
+	gcwe_model.Wg2 += (s_dWg2*learning_rate);
+}
+
+void train(GCWE& gcwe_model, WordVec& word_vec, string src_raw_file, double learning_rate, int epoch, int branch_size, int window_size)
+{
+	ifstream src_raw_in(src_raw_file.c_str(), ios::in);
+
+	cout << "Init idf table..." << endl;
+	word_vec.init_idf(src_raw_file);
+	cout << "Complete to init idf table!" << endl;
+
+	string sentence;
+	vector<string> sentences;
+
+	while (getline(src_raw_in, sentence))
+	{
+		sentences.push_back(sentence);
+	}
+
+	srand(time(0));
+	for (int e = 0; e < epoch; e++)
+	{
+		cout << "Start training epoch " << e + 1 << endl;
+		for (int b = 0; b < branch_size; b++)
+		{
+			int cur_sen = rand() % sentences.size();
+
+			trainOneSentence(gcwe_model, word_vec, sentences[cur_sen], window_size, learning_rate);
+		}
+		cout << "Epoch " << e << "complete!" << endl;
+	}
+}
+
 int main()
 {
 	Config conf("Config.conf");
 
+	//get config
 	string src_vocab_file = conf.get_para("src_vocab_file");
-
+	string output_dir = conf.get_para("output_dir");
 	int word_dim = atoi(conf.get_para("word_dim").c_str());
 	int hidden_dim = atoi(conf.get_para("hidden_dim").c_str());
 	int window_size = atoi(conf.get_para("window_size").c_str());
 	int neg_sample = atoi(conf.get_para("neg_sample").c_str());
+	double learning_rate = stod(conf.get_para("learning_rate"));
+	int epoch = atoi(conf.get_para("epoch").c_str());
+	int branch_size = atoi(conf.get_para("branch_size").c_str());
+	int window_size = atoi(conf.get_para("window_size").c_str());
+
+	//init any
+	double start_clock, end_clock;
 
 	WordVec src_word_vec(word_dim, src_vocab_file);
 
 	GCWE gcwe_model(word_dim, hidden_dim, window_size, neg_sample);
 
-	
+	string src_raw_file = conf.get_para("src_raw_file");
+
+	//training
+	cout << "Start training......" << endl;
+	start_clock = clock();
+	train(gcwe_model, src_word_vec, src_raw_file, learning_rate, epoch, branch_size, window_size);
+	end_clock = clock();
+	cout << "Complete to train word vectors! The cost of time is " << (end_clock - start_clock) / CLOCKS_PER_SEC << endl;
+
+	cout << "Start saving word vector......" << endl;
+	start_clock = clock();
+	src_word_vec.saveWordVec(output_dir);
+	end_clock = clock();
+	cout << "Complete to save word vectors! The cost of time is " << (end_clock - start_clock) / CLOCKS_PER_SEC << endl;
+
+	return 0;
 }

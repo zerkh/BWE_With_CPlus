@@ -41,7 +41,9 @@ public:
 	void init(string filename)
 	{
 		ifstream in(filename.c_str(), ios::in);
-		int cur_id = 0;
+		int cur_id = 1;
+		m_word_id["S"] = 0;
+		m_id_word[0] = "S";
 
 		string line;
 		while (getline(in, line))
@@ -112,13 +114,13 @@ public:
 		}
 	}
 
-	void saveWordVec()
+	void saveWordVec(string output_dir)
 	{
 		time_t t = time(0);
 
 		struct tm* now = localtime(&t);
 
-		string filename = to_string(now->tm_mon + 1) + "-" + to_string(now->tm_mday) + "-" + to_string(now->tm_hour) + "-src.vec";
+		string filename = output_dir + to_string(now->tm_mon + 1) + "-" + to_string(now->tm_mday) + "-" + to_string(now->tm_hour) + "-src.vec";
 	
 		ofstream out(filename.c_str(), ios::out);
 
