@@ -3,6 +3,7 @@
 #include <iostream>
 #include <map>
 #include <ctime>
+#include <string>
 #include <sstream>
 #include <vector>
 #include <fstream>

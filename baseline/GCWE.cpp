@@ -1,4 +1,4 @@
-#include "Eigen/Core"
+#include "Eigen/Dense"
 #include "GCWE.h"
 #include "Utils.h"
 #include "Config.h"
@@ -311,7 +311,6 @@ int main()
 	double learning_rate = stod(conf.get_para("learning_rate"));
 	int epoch = atoi(conf.get_para("epoch").c_str());
 	int branch_size = atoi(conf.get_para("branch_size").c_str());
-	int window_size = atoi(conf.get_para("window_size").c_str());
 
 	//init any
 	double start_clock, end_clock;

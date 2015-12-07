@@ -4,6 +4,9 @@
 #include <iostream>
 #include <vector>
 #include <sstream>
+#include <string>
+using namespace std;
+using namespace Eigen;
 
 inline string strip_str(const string& s, const string chs = " \t\n")
 {
@@ -79,7 +82,7 @@ inline vector<string> splitBySpace(string line)
 	return words;
 }
 
-vector<string> splitString(string& s, string& c)
+inline vector<string> splitString(string& s, const string c)
 {
 	vector<string> v;
 	string::size_type pos1, pos2;
