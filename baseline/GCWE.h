@@ -36,6 +36,10 @@ public:
 	double forward(WordVec& word_vec, RowVectorXi x,  RowVectorXi x_g);
 
 	vector<MatrixXd> backward(WordVec& word_vec, RowVectorXi x, RowVectorXi x_g);
+
+	void saveModel(string save_file);
+
+	void loadModel(string model_file);
 };
 
 void train(Config conf, GCWE& gcwe_model, WordVec& word_vec, string src_raw_file, double learning_rate, int epoch, int branch_size, int window_size);

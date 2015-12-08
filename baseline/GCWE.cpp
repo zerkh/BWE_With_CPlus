@@ -182,6 +182,48 @@ vector<MatrixXd> GCWE::backward(WordVec& word_vec, RowVectorXi x, RowVectorXi x_
 	return derivations;
 }
 
+void GCWE::saveModel(string save_file)
+{
+	ofstream out(save_file.c_str(), ios::out);
+
+	out << "W1:" << endl;
+	out << W1 << endl;
+
+	out << "b1:" << endl;
+	out << b1 << endl;
+
+	out << "W2:" << endl;
+	out << W2 << endl;
+
+	out << "b2:" << endl;
+	out << b2 << endl;
+
+	out << "Wg1:" << endl;
+	out << Wg1 << endl;
+
+	out << "bg1:" << endl;
+	out << bg1 << endl;
+
+	out << "Wg2:" << endl;
+	out << Wg2 << endl;
+
+	out << "bg2:" << endl;
+	out << bg2 << endl;
+
+	out.close();
+}
+
+void GCWE::loadModel(string model_file)
+{
+	ifstream in(model_file.c_str(), ios::in);
+
+
+	in.close();
+}
+
+/***********************/
+/*About model training */
+/***********************/
 static void* deepThread(void* arg)
 {
 	GCWEThread* gt = (GCWEThread*)arg;
@@ -231,7 +273,6 @@ RowVectorXi getWindow(WordVec word_vec, string sentence, int window_size, int wo
 
 vector<MatrixXd> trainOneSentence(GCWE& gcwe_model, WordVec& word_vec, string sentence, int window_size, double learning_rate)
 {
-
 	//derivation items
 	MatrixXd s_dword_emb = MatrixXd::Zero(word_vec.word_emb.rows(), word_vec.word_emb.cols());
 	MatrixXd s_dW2 = MatrixXd::Zero(gcwe_model.W2.rows(), gcwe_model.W2.cols());
