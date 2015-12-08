@@ -214,7 +214,7 @@ public:
 		{
 			out << m_id_word[row] << " ";
 
-			for (int col = 0; col < vocb_size; col++)
+			for (int col = 0; col < word_dim; col++)
 			{
 				if (col != vocb_size - 1)
 				{

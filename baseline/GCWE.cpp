@@ -304,13 +304,6 @@ vector<MatrixXd> trainOneSentence(GCWE& gcwe_model, WordVec& word_vec, string se
 
 void train(Config conf, GCWE& gcwe_model, WordVec& word_vec, string src_raw_file, double learning_rate, int epoch, int branch_size, int window_size)
 {
-	ifstream src_raw_in(src_raw_file.c_str(), ios::in);
-	if (!src_raw_in)
-	{
-		cout << "Cannot open " << src_raw_file << endl;
-		exit(0);
-	}
-
 	int thread_num = atoi(conf.get_para("thread_num").c_str());
 	double start_clock, end_clock;
 	pthread_t* pt = new pthread_t[thread_num];
@@ -320,6 +313,14 @@ void train(Config conf, GCWE& gcwe_model, WordVec& word_vec, string src_raw_file
 	word_vec.init_idf(src_raw_file);
 	end_clock = clock();
 	cout << "Complete to init idf table!" << "The cost of time is " << (end_clock-start_clock)/CLOCKS_PER_SEC << endl;
+
+	ifstream src_raw_in(src_raw_file.c_str(), ios::in);
+	if (!src_raw_in)
+	{
+		cout << "Cannot open " << src_raw_file << endl;
+		exit(0);
+	}
+
 
 	string sentence;
 	vector<string> sentences;
@@ -395,9 +396,10 @@ void train(Config conf, GCWE& gcwe_model, WordVec& word_vec, string src_raw_file
 		gcwe_model.bg1 += (learning_rate*s_dbg1 / branch_size);
 		gcwe_model.Wg2 += (learning_rate*s_dWg2 / branch_size);
 
-		cout << "Epoch " << e << "complete!" << endl;
+		cout << "Epoch " << e << " complete!" << endl;
 	}
 
+	src_raw_in.close();
 	delete threadpara;
 	delete pt;
 }
