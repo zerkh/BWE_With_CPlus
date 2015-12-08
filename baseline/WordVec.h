@@ -12,23 +12,25 @@
 using namespace std;
 using namespace Eigen;
 
+
 class IDFThread
 {
 public:
 	vector<string> sentences;
-	WordVec* word_vec;
+	map<int, string> m_id_word;
 	vector<double> v_id_idf;
+	int  vocb_size;
 };
 
 static void* IdfDeepThread(void* arg)
 {
 	IDFThread& it = (IDFThread&)arg;
 
-	for (int w = 0; w < it.word_vec->vocb_size; w++)
+	for (int w = 0; w < it.vocb_size; w++)
 	{
 		for (int s = 0; s < it.sentences.size(); s++)
 		{
-			if (it.sentences[s].find(it.word_vec->m_id_word[w]) != string::npos)
+			if (it.sentences[s].find(it.m_id_word[w]) != string::npos)
 			{
 				it.v_id_idf[w] += 1;
 			}
@@ -75,10 +77,12 @@ public:
 		while (getline(in, line))
 		{
 			vector<string> components = splitString(line, string("\t"));
-
-			m_word_id[components[1]] = cur_id;
-			m_id_word[cur_id] = components[1];
+			m_word_id.insert(pair<string,int>(components[1],cur_id));
+			m_id_word.insert(pair<int, string>(cur_id,components[1]));
+			cur_id++;
 		}
+
+		in.close();
 	}
 
 	//need raw corpus	
@@ -117,7 +121,12 @@ public:
 					threadpara[t].sentences.push_back(sentences[i]);
 				}
 			}
-			threadpara[t].word_vec = this;
+			threadpara[t].vocb_size = vocb_size;
+			for (map<int, string>::iterator it = m_id_word.begin(); it != m_id_word.end(); it++)
+			{
+				threadpara[t].m_id_word[it->first] = it->second;
+			}
+
 			for (int i = 0; i < vocb_size; i++)
 			{
 				threadpara[t].v_id_idf.push_back(0.0);
@@ -125,6 +134,7 @@ public:
 			ind += sen_per_thread;
 		}
 
+		cout << 1 << endl;
 		for (int t = 0; t < thread_num; t++)
 		{
 			pthread_create(&pt[t], NULL, IdfDeepThread, (void *)(threadpara + t));
@@ -133,6 +143,7 @@ public:
 		{
 			pthread_join(pt[t], NULL);
 		}
+		cout << 2 << endl;		
 
 		for (int t = 0; t < thread_num; t++)
 		{
@@ -143,6 +154,7 @@ public:
 		}
 		for (int w = 0; w < vocb_size; w++)
 		{
+			cout << v_id_idf[w] << endl;
 			v_id_idf[w] = sentences.size() / v_id_idf[w];
 			v_id_idf[w] = log(v_id_idf[w]);
 		}
@@ -232,3 +244,4 @@ public:
 		out.close();
 	}
 };
+

@@ -396,7 +396,7 @@ void train(Config conf, GCWE& gcwe_model, WordVec& word_vec, string src_raw_file
 		gcwe_model.bg1 += (learning_rate*s_dbg1 / branch_size);
 		gcwe_model.Wg2 += (learning_rate*s_dWg2 / branch_size);
 
-		cout << "Epoch " << e << " complete!" << endl;
+		cout << "Epoch " << e+1 << " complete!" << endl;
 	}
 
 	src_raw_in.close();
