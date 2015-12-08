@@ -24,15 +24,15 @@ public:
 
 static void* IdfDeepThread(void* arg)
 {
-	IDFThread& it = (IDFThread&)arg;
+	IDFThread* it = (IDFThread*)arg;
 
-	for (int w = 0; w < it.vocb_size; w++)
+	for (int w = 0; w < it->vocb_size; w++)
 	{
-		for (int s = 0; s < it.sentences.size(); s++)
+		for (int s = 0; s < it->sentences.size(); s++)
 		{
-			if (it.sentences[s].find(it.m_id_word[w]) != string::npos)
+			if (it->sentences[s].find(it->m_id_word[w]) != string::npos)
 			{
-				it.v_id_idf[w] += 1;
+				it->v_id_idf[w] += 1;
 			}
 		}
 	}
@@ -98,6 +98,8 @@ public:
 		{
 			sentences.push_back(line);
 		}
+		in.close();
+
 
 		//init multi-thread
 		IDFThread* threadpara = new IDFThread[thread_num];
@@ -134,7 +136,6 @@ public:
 			ind += sen_per_thread;
 		}
 
-		cout << 1 << endl;
 		for (int t = 0; t < thread_num; t++)
 		{
 			pthread_create(&pt[t], NULL, IdfDeepThread, (void *)(threadpara + t));
@@ -143,7 +144,6 @@ public:
 		{
 			pthread_join(pt[t], NULL);
 		}
-		cout << 2 << endl;		
 
 		for (int t = 0; t < thread_num; t++)
 		{
@@ -154,7 +154,6 @@ public:
 		}
 		for (int w = 0; w < vocb_size; w++)
 		{
-			cout << v_id_idf[w] << endl;
 			v_id_idf[w] = sentences.size() / v_id_idf[w];
 			v_id_idf[w] = log(v_id_idf[w]);
 		}

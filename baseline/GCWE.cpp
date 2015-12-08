@@ -184,22 +184,22 @@ vector<MatrixXd> GCWE::backward(WordVec& word_vec, RowVectorXi x, RowVectorXi x_
 
 static void* deepThread(void* arg)
 {
-	GCWEThread& gt = (GCWEThread&)arg;
+	GCWEThread* gt = (GCWEThread*)arg;
 
 	srand(time(0));
-	for (int b = 0; b < gt.batch_size; b++)
+	for (int b = 0; b < gt->batch_size; b++)
 	{
-		int cur_sen = rand() / gt.sentences.size();
+		int cur_sen = rand() / gt->sentences.size();
 
-		vector<MatrixXd> derivations = trainOneSentence(*gt.gcwe_model, *gt.word_vec, gt.sentences[cur_sen], gt.window_size, gt.learning_rate);
+		vector<MatrixXd> derivations = trainOneSentence(*gt->gcwe_model, *gt->word_vec, gt->sentences[cur_sen], gt->window_size, gt->learning_rate);
 
-		gt.dword_emb += derivations[0];
-		gt.dW1 += derivations[1];
-		gt.db1 += derivations[2];
-		gt.dW2 += derivations[3];
-		gt.dWg1 += derivations[4];
-		gt.dbg1 += derivations[5];
-		gt.dWg2 += derivations[6];
+		gt->dword_emb += derivations[0];
+		gt->dW1 += derivations[1];
+		gt->db1 += derivations[2];
+		gt->dW2 += derivations[3];
+		gt->dWg1 += derivations[4];
+		gt->dbg1 += derivations[5];
+		gt->dWg2 += derivations[6];
 	}
 
 	pthread_exit(NULL);
