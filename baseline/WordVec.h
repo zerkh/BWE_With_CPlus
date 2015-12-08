@@ -7,9 +7,34 @@
 #include <sstream>
 #include <vector>
 #include <fstream>
+#include "Config.h"
 #include "Utils.h"
 using namespace std;
 using namespace Eigen;
+
+class IDFThread
+{
+public:
+	vector<string> sentences;
+	WordVec* word_vec;
+	vector<double> v_id_idf;
+};
+
+static void* IdfDeepThread(void* arg)
+{
+	IDFThread& it = (IDFThread&)arg;
+
+	for (int w = 0; w < it.word_vec->vocb_size; w++)
+	{
+		for (int s = 0; s < it.sentences.size(); s++)
+		{
+			if (it.sentences[s].find(it.word_vec->m_id_word[w]) != string::npos)
+			{
+				it.v_id_idf[w] += 1;
+			}
+		}
+	}
+}
 
 class WordVec
 {
@@ -61,6 +86,8 @@ public:
 	{
 		ifstream in(filename.c_str(), ios::in);
 		vector<string> sentences;
+		Config conf("Config.conf");
+		int thread_num = atoi(conf.get_para("thread_num").c_str());
 
 		string line;
 		while (getline(in, line))
@@ -68,18 +95,71 @@ public:
 			sentences.push_back(line);
 		}
 
-		for (int w = 0; w < vocb_size; w++)
+		//init multi-thread
+		IDFThread* threadpara = new IDFThread[thread_num];
+		pthread_t* pt = new pthread_t[thread_num];
+
+		int sen_per_thread = sentences.size() / thread_num;
+		int ind = 0;
+		for (int t = 0; t < thread_num; t++)
 		{
-			for (int s = 0; s < sentences.size(); s++)
+			if (t != thread_num - 1)
 			{
-				if (sentences[s].find(m_id_word[w]) != string::npos)
+				for (int i = ind; i < ind + sen_per_thread; i++)
 				{
-					v_id_idf[w] += 1;
+					threadpara[t].sentences.push_back(sentences[i]);
 				}
 			}
-
-			v_id_idf[w] = sentences.size() / v_id_idf[w];
+			else
+			{
+				for (int i = ind; i < sentences.size(); i++)
+				{
+					threadpara[t].sentences.push_back(sentences[i]);
+				}
+			}
+			threadpara[t].word_vec = this;
+			for (int i = 0; i < vocb_size; i++)
+			{
+				threadpara[t].v_id_idf.push_back(0.0);
+			}
+			ind += sen_per_thread;
 		}
+
+		for (int t = 0; t < thread_num; t++)
+		{
+			pthread_create(&pt[t], NULL, IdfDeepThread, (void *)(threadpara + t));
+		}
+		for (int t = 0; t < thread_num; t++)
+		{
+			pthread_join(pt[t], NULL);
+		}
+
+		for (int t = 0; t < thread_num; t++)
+		{
+			for (int i = 0; i < v_id_idf.size(); i++)
+			{
+				v_id_idf[i] += threadpara[t].v_id_idf[i];
+			}
+		}
+		for (int w = 0; w < vocb_size; w++)
+		{
+			v_id_idf[w] = sentences.size() / v_id_idf[w];
+			v_id_idf[w] = log(v_id_idf[w]);
+		}
+
+		saveIdfTable();
+	}
+
+	void saveIdfTable()
+	{
+		ofstream out("idf.table", ios::out);
+
+		for (int i = 0; i < v_id_idf.size(); i++)
+		{
+			out << m_id_word[i] << " " << v_id_idf[i] << endl;
+		}
+
+		out.close();
 	}
 
 	void loadWordVec(string filename)
