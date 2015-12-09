@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __GCWE__
+#define __GCWE__
+
 #include "Eigen/Dense"
 #include "WordVec.h"
 #include "Utils.h"
@@ -48,3 +50,4 @@ vector<MatrixXd> trainOneSentence(GCWE& gcwe_model, WordVec& word_vec, string se
 
 RowVectorXi getWindow(WordVec word_vec, string sentence, int window_size, int word_pos);
 
+#endif

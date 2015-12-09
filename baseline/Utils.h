@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __UTILS__
+#define __UTILS__
 
 #include "Eigen/Core"
 #include <iostream>
@@ -124,3 +125,4 @@ inline vector<string> splitString(string& s, const string c)
 	return v;
 }
 
+#endif

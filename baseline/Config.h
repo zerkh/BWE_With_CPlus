@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __CONFIG__
+#define __CONFIG__
+
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -70,3 +72,4 @@ public:
 		cout << endl << endl;
 	}
 };
+#endif

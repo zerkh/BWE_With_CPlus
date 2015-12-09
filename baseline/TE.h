@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __TE__
+#define __TE__
+
 #include "Eigen/Core"
 #include "WordVec.h"
 #include "GCWE.h"
@@ -25,3 +27,5 @@ public:
 
 	vector<MatrixXd> backward(WordVec src_word_vec, WordVec& tgt_word_vec);
 };
+
+#endif

@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __WORDVEC__
+#define __WORDVEC__
+
 #include "Eigen/Dense"
 #include <iostream>
 #include <map>
@@ -244,3 +246,4 @@ public:
 	}
 };
 
+#endif

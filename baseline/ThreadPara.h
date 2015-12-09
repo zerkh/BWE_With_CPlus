@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __THREADPARA__
+#define __THREADPARA__
+
 #include "Utils.h"
 #include "GCWE.h"
 #include "TE.h"
@@ -136,3 +138,5 @@ public:
 		dbg2 = RowVectorXd::Zero(1);
 	}
 };
+
+#endif
