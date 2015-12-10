@@ -1,27 +1,31 @@
 # Executable
-EXE    = gcwe
+GCWE_EXE    = gcwe
+TE_EXE	= te
 	
 # Compiler, Linker Defines
 CC      = g++
 CFLAGS  = -Wall -O3 -Wno-deprecated -m64 -I. -Wno-unused -std=c++11 
-#LIBS    = ./srilm-lib/libsrilm.a ./srilm-lib/lm.a ./srilm-lib/misc.a ./srilm-lib/dstruct.a
 #LIBS    = ./lib/lm.a ./lib/misc.a ./lib/dstruct.a
 #LDFLAGS = $(LIBS)
 
 # Compile and Assemble C++ Source Files into Object Files
-%.o: %.cc
-	echo compiling...$<
-	$(CC) $(CFLAGS) -c $<
-# -o $@
+%.o: %.cpp
+	$(CC) $(CFLAGS) -c $< -o $@
+
 # Source and Object files
 SRC    = $(wildcard *.cpp)
 OBJ    = $(patsubst %.cpp, %.o, $(SRC))
 OGCWE = GCWE.o
+OTE = main.o
+
+all:$(GCWE_EXE) $(TE_EXE)
+.PHONY : all
 
 # Link all Object Files with external Libraries into Binaries
-$(EXE): $(OBJ)
-	echo linking...
-	$(CC) $(CFLAGS) $(OGCWE) -o $(EXE) -lz -lpthread
+$(GCWE_EXE): $(OGCWE)
+	$(CC) $(CFLAGS) $(OGCWE) -o $(GCWE_EXE) -lz -lpthread
+$(TE_EXE): $(OTE)
+	$(CC) $(CFLAGS) $(OTE) -o $(TE_EXE) -lz -lpthread
 
 .PHONY: clean
 clean:

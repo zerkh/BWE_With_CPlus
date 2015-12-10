@@ -31,6 +31,7 @@ inline string strip_str(const string& s, const string chs = " \t\n")
 	return i >= j ? "" : s.substr(i, j - i);
 };
 
+/*
 inline string to_string(int i)
 {
 	vector<char> pos;
@@ -50,6 +51,7 @@ inline string to_string(int i)
 
 	return str;
 }
+*/
 
 inline RowVectorXd tanh(RowVectorXd v)
 {

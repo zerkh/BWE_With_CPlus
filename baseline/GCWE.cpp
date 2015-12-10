@@ -231,10 +231,9 @@ static void* deepThread(void* arg)
 	srand(time(0));
 	for (int b = 0; b < gt->batch_size; b++)
 	{
-		int cur_sen = rand() / gt->sentences.size();
+		int cur_sen = rand() % gt->sentences.size();
 
 		vector<MatrixXd> derivations = trainOneSentence(*gt->gcwe_model, *gt->word_vec, gt->sentences[cur_sen], gt->window_size, gt->learning_rate);
-
 		gt->dword_emb += derivations[0];
 		gt->dW1 += derivations[1];
 		gt->db1 += derivations[2];
@@ -376,17 +375,18 @@ void train(Config conf, GCWE& gcwe_model, WordVec& word_vec, string src_raw_file
 	int sentence_per_thread = sentences.size() / thread_num;
 	int ind = 0;
 	GCWEThread* threadpara = new GCWEThread[thread_num];
-	for (int i = 0; i < thread_num-1; i++)
+	for (int t = 0; t < thread_num-1; t++)
 	{
-		threadpara[i].init(gcwe_model, word_vec, word_vec.word_dim, gcwe_model.hidden_dim, window_size, learning_rate);
+		threadpara[t].init(gcwe_model, word_vec, word_vec.word_dim, gcwe_model.hidden_dim, window_size, learning_rate);
 		for (int i = ind; i < ind + sentence_per_thread; i++)
 		{
-			threadpara[i].sentences.push_back(sentences[i]);
+			threadpara[t].sentences.push_back(sentences[i]);
 		}
 		ind += sentence_per_thread;
+		threadpara[t].batch_size = sentence_branch;
 	}
 	threadpara[thread_num - 1].init(gcwe_model, word_vec, word_vec.word_dim, gcwe_model.hidden_dim, window_size, learning_rate);
-	threadpara[thread_num - 1].batch_size = branch_size - thread_num*sentence_branch;
+	threadpara[thread_num - 1].batch_size = branch_size - (thread_num-1)*sentence_branch;
 	for (int i = ind; i < sentences.size(); i++)
 	{
 		threadpara[thread_num - 1].sentences.push_back(sentences[i]);
@@ -441,7 +441,7 @@ void train(Config conf, GCWE& gcwe_model, WordVec& word_vec, string src_raw_file
 	}
 
 	src_raw_in.close();
-	delete threadpara;
+	delete []threadpara;
 	delete pt;
 }
 
@@ -459,6 +459,7 @@ int main()
 	double learning_rate = atof(conf.get_para("learning_rate").c_str());
 	int epoch = atoi(conf.get_para("epoch").c_str());
 	int branch_size = atoi(conf.get_para("branch_size").c_str());
+	string src_gcwe_file = conf.get_para("src_gcwe_file");
 
 	//init any
 	double start_clock, end_clock;
@@ -481,6 +482,12 @@ int main()
 	src_word_vec.saveWordVec(output_dir);
 	end_clock = clock();
 	cout << "Complete to save word vectors! The cost of time is " << (end_clock - start_clock) / CLOCKS_PER_SEC << endl;
+
+	cout << "Start saving GCWE model......" << endl;
+	start_clock = clock();
+	gcwe_model.saveModel(src_gcwe_file);
+	end_clock = clock();
+	cout << "Complete to save GCWE model! The cost of time is " << (end_clock - start_clock) / CLOCKS_PER_SEC << endl;
 
 	return 0;
 }
