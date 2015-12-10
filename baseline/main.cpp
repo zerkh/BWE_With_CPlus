@@ -108,7 +108,7 @@ static void* deepThread(void* arg)
 	{
 		int cur_sen = rand() / gt->sentences.size();
 
-		vector<MatrixXd> derivations = tgt::trainOneSentence(*gt->gcwe_model, *gt->te_model, *gt->src_word_vec, *gt->tgt_word_vec, gt->sentences[cur_sen], gt->window_size, gt->learning_rate, gt->lambda);
+		vector<MatrixXd> derivations = tgt::trainOneSentence(gt->gcwe_model, gt->te_model, gt->src_word_vec, gt->tgt_word_vec, gt->sentences[cur_sen], gt->window_size, gt->learning_rate, gt->lambda);
 
 		gt->dword_emb += derivations[0];
 		gt->dW1 += derivations[1];
