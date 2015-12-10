@@ -17,6 +17,8 @@ public:
 	int src_vocb_size;
 	int tgt_vocb_size;
 
+	TE() {};
+
 	TE(WordVec src_word_vec, WordVec tgt_word_vec);
 
 	void readAlignTable(string filename, WordVec src_word_vec, WordVec tgt_word_vec);

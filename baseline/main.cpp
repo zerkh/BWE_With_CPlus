@@ -218,6 +218,11 @@ void trainTgtWordVec(Config conf, GCWE& gcwe_model, TE& te_model, WordVec src_wo
 		gcwe_model.Wg2 += (learning_rate*s_dWg2 / branch_size);
 
 		cout << "Epoch " << e + 1 << " complete!" << endl;
+
+		for (int t = 0; t < thread_num; t++)
+		{
+			threadpara[t].update(gcwe_model, te_model, src_word_vec, tgt_word_vec);
+		}
 	}
 
 	src_raw_in.close();

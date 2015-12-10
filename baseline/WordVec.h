@@ -50,6 +50,8 @@ public:
 	int word_dim;
 	int vocb_size;
 
+	WordVec() {};
+
 	WordVec(int word_dim, string filename)
 	{
 		this->word_dim = word_dim;

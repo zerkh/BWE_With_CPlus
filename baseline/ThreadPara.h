@@ -24,12 +24,12 @@ public:
 	int batch_size;
 	double learning_rate;
 	vector<string> sentences;
-	GCWE* gcwe_model;
-	WordVec* word_vec;
+	GCWE gcwe_model;
+	WordVec word_vec;
 
 	GCWEThread() {};
 
-	void init(GCWE& gcwe, WordVec& word_vec, int word_dim, int hidden_dim, int window_size, double learning_rate)
+	void init(GCWE gcwe, WordVec word_vec, int word_dim, int hidden_dim, int window_size, double learning_rate)
 	{
 		dword_emb = MatrixXd::Zero(word_vec.vocb_size, word_dim);
 
@@ -43,8 +43,8 @@ public:
 		dWg2 = MatrixXd::Zero(hidden_dim, 1);
 		dbg2 = RowVectorXd::Zero(1);
 
-		gcwe_model = &gcwe;
-		this->word_vec = &word_vec;
+		gcwe_model = gcwe;
+		this->word_vec = word_vec;
 
 		this->learning_rate = learning_rate;
 		this->word_dim = word_dim;
@@ -52,9 +52,15 @@ public:
 		this->window_size = window_size;
 	}
 
+	void update(GCWE gcwe, WordVec word_vec)
+	{
+		this->gcwe_model = gcwe;
+		this->word_vec = word_vec;
+	}
+
 	void clear()
 	{
-		dword_emb = MatrixXd::Zero(word_vec->vocb_size, word_dim);
+		dword_emb = MatrixXd::Zero(word_vec.vocb_size, word_dim);
 
 		dW1 = MatrixXd::Zero(window_size*word_dim, hidden_dim);
 		db1 = RowVectorXd::Zero(hidden_dim);
@@ -90,14 +96,14 @@ public:
 
 	MatrixXd alignTable;
 	vector<string> sentences;
-	GCWE* gcwe_model;
-	WordVec* src_word_vec;
-	WordVec* tgt_word_vec;
-	TE* te_model;
+	GCWE gcwe_model;
+	WordVec src_word_vec;
+	WordVec tgt_word_vec;
+	TE te_model;
 
 	TEThread() {};
 
-	void init(GCWE& gcwe, TE& te, WordVec& src_word_vec, WordVec& tgt_word_vec, int word_dim, int hidden_dim, int window_size, double learning_rate, double lambda)
+	void init(GCWE gcwe, TE te, WordVec src_word_vec, WordVec tgt_word_vec, int word_dim, int hidden_dim, int window_size, double learning_rate, double lambda)
 	{
 		dword_emb = MatrixXd::Zero(tgt_word_vec.vocb_size, word_dim);
 
@@ -111,10 +117,10 @@ public:
 		dWg2 = MatrixXd::Zero(hidden_dim, 1);
 		dbg2 = RowVectorXd::Zero(1);
 
-		gcwe_model = &gcwe;
-		this->src_word_vec = &src_word_vec;
-		this->tgt_word_vec = &tgt_word_vec;
-		te_model = &te;
+		gcwe_model = gcwe;
+		this->src_word_vec = src_word_vec;
+		this->tgt_word_vec = tgt_word_vec;
+		te_model = te;
 
 		this->lambda = lambda;
 		this->learning_rate = learning_rate;
@@ -123,9 +129,17 @@ public:
 		this->window_size = window_size;
 	}
 
+	void update(GCWE gcwe_model, TE te_model, WordVec src_word_vec, WordVec tgt_word_vec)
+	{
+		this->gcwe_model = gcwe_model;
+		this->te_model = te_model;
+		this->src_word_vec = src_word_vec;
+		this->tgt_word_vec = tgt_word_vec;
+	}
+
 	void clear()
 	{
-		dword_emb = MatrixXd::Zero(tgt_word_vec->vocb_size, word_dim);
+		dword_emb = MatrixXd::Zero(tgt_word_vec.vocb_size, word_dim);
 
 		dW1 = MatrixXd::Zero(window_size*word_dim, hidden_dim);
 		db1 = RowVectorXd::Zero(hidden_dim);
