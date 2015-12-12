@@ -14,89 +14,86 @@ Baseline of our work
 Reference Zou EMNLP 2013
 Author kh
 */
-namespace tgt
+vector<MatrixXd> trainOneSentence(GCWE& gcwe_model, TE& te_model, WordVec src_word_vec, WordVec& tgt_word_vec, string sentence, int window_size, double learning_rate, double lambda)
 {
-	vector<MatrixXd> trainOneSentence(GCWE& gcwe_model, TE& te_model, WordVec src_word_vec, WordVec& tgt_word_vec, string sentence, int window_size, double learning_rate, double lambda)
+
+	//derivation items
+	MatrixXd s_dword_emb = MatrixXd::Zero(tgt_word_vec.word_emb.rows(), tgt_word_vec.word_emb.cols());
+	MatrixXd s_dW2 = MatrixXd::Zero(gcwe_model.W2.rows(), gcwe_model.W2.cols());
+	MatrixXd s_dW1 = MatrixXd::Zero(gcwe_model.W1.rows(), gcwe_model.W1.cols());
+	RowVectorXd s_db1 = RowVectorXd::Zero(gcwe_model.b1.cols());
+	MatrixXd s_dWg2 = MatrixXd::Zero(gcwe_model.Wg2.rows(), gcwe_model.Wg2.cols());
+	MatrixXd s_dWg1 = MatrixXd::Zero(gcwe_model.Wg1.rows(), gcwe_model.Wg1.cols());
+	RowVectorXd s_dbg1 = RowVectorXd::Zero(gcwe_model.bg1.cols());
+
+
+	vector<string> words = splitBySpace(sentence);
+
+	vector<int> pos_of_word;
+
+	for (int w = 0; w < words.size(); w++)
 	{
-
-		//derivation items
-		MatrixXd s_dword_emb = MatrixXd::Zero(tgt_word_vec.word_emb.rows(), tgt_word_vec.word_emb.cols());
-		MatrixXd s_dW2 = MatrixXd::Zero(gcwe_model.W2.rows(), gcwe_model.W2.cols());
-		MatrixXd s_dW1 = MatrixXd::Zero(gcwe_model.W1.rows(), gcwe_model.W1.cols());
-		RowVectorXd s_db1 = RowVectorXd::Zero(gcwe_model.b1.cols());
-		MatrixXd s_dWg2 = MatrixXd::Zero(gcwe_model.Wg2.rows(), gcwe_model.Wg2.cols());
-		MatrixXd s_dWg1 = MatrixXd::Zero(gcwe_model.Wg1.rows(), gcwe_model.Wg1.cols());
-		RowVectorXd s_dbg1 = RowVectorXd::Zero(gcwe_model.bg1.cols());
-
-
-		vector<string> words = splitBySpace(sentence);
-
-		vector<int> pos_of_word;
-
-		for (int w = 0; w < words.size(); w++)
-		{
-			pos_of_word.push_back(tgt_word_vec.m_word_id[words[w]]);
-		}
-
-		//get global context
-		RowVectorXi x_g(words.size());
-		for (int i = 0; i < words.size(); i++)
-		{
-			x_g(i) = pos_of_word[i];
-		}
-
-		//train one sentence
-		for (int w = 0; w < words.size(); w++)
-		{
-			RowVectorXi x = getWindow(tgt_word_vec, sentence, window_size, w);
-
-			vector<MatrixXd> derivations = gcwe_model.backward(tgt_word_vec, x, x_g);
-
-			s_dword_emb += derivations[0];
-			s_dW1 += derivations[1];
-			s_db1 += derivations[2];
-			s_dW2 += derivations[3];
-			s_dWg1 += derivations[4];
-			s_dbg1 += derivations[5];
-			s_dWg2 += derivations[6];
-		}
-
-		vector<MatrixXd> derivations = te_model.backward(src_word_vec, tgt_word_vec);
-		MatrixXd te_dword_emb = MatrixXd::Zero(s_dword_emb.rows(), s_dword_emb.cols());
-		for (int w = 0; w < words.size(); w++)
-		{
-			te_dword_emb.row(tgt_word_vec.m_word_id[words[w]]) = derivations[0].row(tgt_word_vec.m_word_id[words[w]]);
-		}
-
-		s_dword_emb /= words.size();
-		s_dW1 /= words.size();
-		s_db1 /= words.size();
-		s_dW2 /= words.size();
-		s_dWg1 /= words.size();
-		s_dbg1 /= words.size();
-		s_dWg2 /= words.size();
-
-		s_dword_emb += (lambda*te_dword_emb);
-
-		/*word_vec.word_emb += (s_dword_emb*learning_rate);
-		gcwe_model.W1 += (s_dW1*learning_rate);
-		gcwe_model.b1 += (s_db1*learning_rate);
-		gcwe_model.W2 += (s_dW2*learning_rate);
-		gcwe_model.Wg1 += (s_dWg1*learning_rate);
-		gcwe_model.bg1 += (s_dbg1*learning_rate);
-		gcwe_model.Wg2 += (s_dWg2*learning_rate);*/
-
-		derivations.clear();
-		derivations.push_back(s_dword_emb);
-		derivations.push_back(s_dW1);
-		derivations.push_back(s_db1);
-		derivations.push_back(s_dW2);
-		derivations.push_back(s_dWg1);
-		derivations.push_back(s_dbg1);
-		derivations.push_back(s_dWg2);
-
-		return derivations;
+		pos_of_word.push_back(tgt_word_vec.m_word_id[words[w]]);
 	}
+
+	//get global context
+	RowVectorXi x_g(words.size());
+	for (int i = 0; i < words.size(); i++)
+	{
+		x_g(i) = pos_of_word[i];
+	}
+
+	//train one sentence
+	for (int w = 0; w < words.size(); w++)
+	{
+		RowVectorXi x = getWindow(tgt_word_vec, sentence, window_size, w);
+
+		vector<MatrixXd> derivations = gcwe_model.backward(tgt_word_vec, x, x_g);
+
+		s_dword_emb += derivations[0];
+		s_dW1 += derivations[1];
+		s_db1 += derivations[2];
+		s_dW2 += derivations[3];
+		s_dWg1 += derivations[4];
+		s_dbg1 += derivations[5];
+		s_dWg2 += derivations[6];
+	}
+
+	vector<MatrixXd> derivations = te_model.backward(src_word_vec, tgt_word_vec);
+	MatrixXd te_dword_emb = MatrixXd::Zero(s_dword_emb.rows(), s_dword_emb.cols());
+	for (int w = 0; w < words.size(); w++)
+	{
+		te_dword_emb.row(tgt_word_vec.m_word_id[words[w]]) = derivations[0].row(tgt_word_vec.m_word_id[words[w]]);
+	}
+
+	s_dword_emb /= words.size();
+	s_dW1 /= words.size();
+	s_db1 /= words.size();
+	s_dW2 /= words.size();
+	s_dWg1 /= words.size();
+	s_dbg1 /= words.size();
+	s_dWg2 /= words.size();
+
+	s_dword_emb += (lambda*te_dword_emb);
+
+	/*word_vec.word_emb += (s_dword_emb*learning_rate);
+	gcwe_model.W1 += (s_dW1*learning_rate);
+	gcwe_model.b1 += (s_db1*learning_rate);
+	gcwe_model.W2 += (s_dW2*learning_rate);
+	gcwe_model.Wg1 += (s_dWg1*learning_rate);
+	gcwe_model.bg1 += (s_dbg1*learning_rate);
+	gcwe_model.Wg2 += (s_dWg2*learning_rate);*/
+
+	derivations.clear();
+	derivations.push_back(s_dword_emb);
+	derivations.push_back(s_dW1);
+	derivations.push_back(s_db1);
+	derivations.push_back(s_dW2);
+	derivations.push_back(s_dWg1);
+	derivations.push_back(s_dbg1);
+	derivations.push_back(s_dWg2);
+
+	return derivations;
 }
 
 static void* deepThread(void* arg)
@@ -108,7 +105,7 @@ static void* deepThread(void* arg)
 	{
 		int cur_sen = rand() / gt->sentences.size();
 
-		vector<MatrixXd> derivations = tgt::trainOneSentence(gt->gcwe_model, gt->te_model, gt->src_word_vec, gt->tgt_word_vec, gt->sentences[cur_sen], gt->window_size, gt->learning_rate, gt->lambda);
+		vector<MatrixXd> derivations = trainOneSentence(gt->gcwe_model, gt->te_model, gt->src_word_vec, gt->tgt_word_vec, gt->sentences[cur_sen], gt->window_size, gt->learning_rate, gt->lambda);
 
 		gt->dword_emb += derivations[0];
 		gt->dW1 += derivations[1];
@@ -256,13 +253,16 @@ int main()
 	WordVec tgt_word_vec(word_dim, tgt_vocab_file);
 
 	//load word vector of source language pre-trained by GCWE
+	cout << "Load src word vectors from \"" << conf.get_para("src_word_vec") << "\"......" << endl;
 	src_word_vec.loadWordVec(conf.get_para("src_word_vec"));
 
 	//init tgt GCWE model and translation-equivalence
+	cout << "Init tgt GCWE model and TE model ......" << endl;
 	GCWE gcwe_model(word_dim, hidden_dim, window_size, neg_sample);
 	TE te_model(src_word_vec, tgt_word_vec);
 
 	//init target word vector with equivalence and source word vector
+	cout << "Reading alignment table......" << endl;
 	te_model.readAlignTable(align_table_file, src_word_vec, tgt_word_vec);
 
 	te_model.initTgtWordVec(src_word_vec, tgt_word_vec);
