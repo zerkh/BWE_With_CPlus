@@ -22,7 +22,7 @@ all:$(GCWE_EXE) $(OTE) $(EXE)
 # Link all Object Files with external Libraries into Binaries
 $(EXE): $(OBJ) 
 		echo linking... 
-		$(CC) $(CFLAGS) $(OBJ) $(LDFLAGS) -o $(EXE) -lz 
+		$(CC) $(CFLAGS) $(OBJ) $(LDFLAGS) -o $(EXE) -lpthread -lz 
 .PHONY: clean
 clean:
 	 -rm -f core *.o

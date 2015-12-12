@@ -1,6 +1,5 @@
 #Executable
 GCWE_EXE    = gcwe
-EXE	= te
 	
 # Compiler, Linker Defines
 CC      = g++
@@ -20,9 +19,9 @@ all:$(GCWE_EXE) $(OTE) $(EXE)
 .PHONY : all
 
 # Link all Object Files with external Libraries into Binaries
-$(EXE): $(OBJ) 
+$(GCWE_EXE): $(OBJ) 
 		echo linking... 
-		$(CC) $(CFLAGS) $(OBJ) $(LDFLAGS) -o $(EXE) -lz 
+		$(CC) $(CFLAGS) $(OBJ) $(LDFLAGS) -o $(GCWE_EXE) -lpthread -lz 
 
 .PHONY: clean
 clean:
