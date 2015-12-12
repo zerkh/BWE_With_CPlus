@@ -86,7 +86,7 @@ namespace tgt
 		gcwe_model.bg1 += (s_dbg1*learning_rate);
 		gcwe_model.Wg2 += (s_dWg2*learning_rate);*/
 
-		vector<MatrixXd> derivations;
+		derivations.clear();
 		derivations.push_back(s_dword_emb);
 		derivations.push_back(s_dW1);
 		derivations.push_back(s_db1);
