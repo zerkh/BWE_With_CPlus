@@ -21,6 +21,8 @@ public:
 	vector<MatrixXd> backward(WordVec& word_vec, int x, RowVectorXi c);
 
 	void saveModel(string save_file);
+
+	void loadModel(string load_file);
 };
 
 void train(Config conf, SkipGram& skipgram_model, WordVec& word_vec, string src_raw_file, double learning_rate, int epoch, int branch_size, int window_size);

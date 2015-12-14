@@ -80,6 +80,11 @@ void SkipGram::saveModel(string save_file)
 	out << W << endl;
 }
 
+void SkipGram::loadModel(string load_file)
+{
+
+}
+
 /***********************/
 /*About model training */
 /***********************/

@@ -174,19 +174,12 @@ void train(Config conf, SkipGram& skipgram_model, WordVec& word_vec, string src_
 	double start_clock, end_clock;
 	pthread_t* pt = new pthread_t[thread_num];
 
-	cout << "Init idf table..." << endl;
-	start_clock = clock();
-	word_vec.init_idf(src_raw_file);
-	end_clock = clock();
-	cout << "Complete to init idf table!" << "The cost of time is " << (end_clock - start_clock) / CLOCKS_PER_SEC << endl;
-
 	ifstream src_raw_in(src_raw_file.c_str(), ios::in);
 	if (!src_raw_in)
 	{
 		cout << "Cannot open " << src_raw_file << endl;
 		exit(0);
 	}
-
 
 	string sentence;
 	vector<string> sentences;

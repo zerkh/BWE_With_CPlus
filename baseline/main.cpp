@@ -207,7 +207,7 @@ int main()
 	src_word_vec.loadWordVec(conf.get_para("src_word_vec"));
 
 	//init tgt GCWE model and translation-equivalence
-	cout << "Init tgt GCWE model and TE model ......" << endl;
+	cout << "Init tgt skip-gram model and TE model ......" << endl;
 	SkipGram skipgram_model(tgt_word_vec.vocb_size, word_dim);
 	TE te_model(src_word_vec, tgt_word_vec);
 
