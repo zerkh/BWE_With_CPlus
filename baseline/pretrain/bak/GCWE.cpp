@@ -450,6 +450,7 @@ void train(Config conf, GCWE& gcwe_model, WordVec& word_vec, string src_raw_file
 	delete pt;
 }
 
+/*
 int main()
 {
 	Config conf("Config.conf");
@@ -496,3 +497,4 @@ int main()
 
 	return 0;
 }
+*/

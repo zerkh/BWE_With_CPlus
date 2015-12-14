@@ -1,5 +1,5 @@
 #Executable
-GCWE_EXE    = gcwe
+SKIPGRAM_EXE    = skipgram
 	
 # Compiler, Linker Defines
 CC      = g++
@@ -15,13 +15,13 @@ CFLAGS  = -Wall -O3 -Wno-deprecated -m64 -I. -Wno-unused -std=c++11
 SRC    = $(wildcard *.cpp)
 OBJ    = $(patsubst %.cpp, %.o, $(SRC))
 
-all:$(GCWE_EXE) $(OTE) $(EXE)
+all:$(SKIPGRAM_EXE)
 .PHONY : all
 
 # Link all Object Files with external Libraries into Binaries
-$(GCWE_EXE): $(OBJ) 
+$(SKIPGRAM_EXE): $(OBJ) 
 		echo linking... 
-		$(CC) $(CFLAGS) $(OBJ) $(LDFLAGS) -o $(GCWE_EXE) -lpthread -lz 
+		$(CC) $(CFLAGS) $(OBJ) $(LDFLAGS) -o $(SKIPGRAM_EXE) -lpthread -lz 
 
 .PHONY: clean
 clean:

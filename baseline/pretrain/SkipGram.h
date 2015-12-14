@@ -3,7 +3,6 @@
 
 #include "Utils.h"
 #include "WordVec.h"
-#include "ThreadPara.h"
 
 class SkipGram
 {

@@ -1,5 +1,5 @@
 #Executable
-GCWE_EXE    = gcwe
+SKIPGRAM_EXE    = skipgram
 EXE	= te
 	
 # Compiler, Linker Defines

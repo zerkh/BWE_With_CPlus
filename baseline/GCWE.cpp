@@ -221,29 +221,3 @@ void GCWE::loadModel(string model_file)
 	in.close();
 }
 
-/***********************/
-/*About model training */
-/***********************/
-RowVectorXi getWindow(WordVec word_vec, string sentence, int window_size, int word_pos)
-{
-	vector<string> words = splitBySpace(sentence);
-	vector<int> pos_of_word;
-
-	for (int i = 0; i < window_size - 1; i++)
-	{
-		pos_of_word.push_back(0);
-	}
-
-	for (int w = 0; w < words.size(); w++)
-	{
-		pos_of_word.push_back(word_vec.m_word_id[words[w]]);
-	}
-
-	RowVectorXi window(window_size);
-	for (int i = word_pos; i < window_size + word_pos; i++)
-	{
-		window(i - word_pos) = pos_of_word[i];
-	}
-
-	return window;
-}

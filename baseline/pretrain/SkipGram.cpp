@@ -1,4 +1,5 @@
 #include "SkipGram.h"
+#include "ThreadPara.h"
 
 SkipGram::SkipGram(int vocb_size, int word_dim)
 {
