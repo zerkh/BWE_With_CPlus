@@ -67,8 +67,8 @@ vector<MatrixXd> SkipGram::backward(WordVec& word_vec, int x, RowVectorXi c)
 	}
 
 	vector<MatrixXd> derivation;
-	derivation.push_back(dW);
 	derivation.push_back(dword_emb);
+	derivation.push_back(dW);
 
 	return derivation;
 }
@@ -138,13 +138,6 @@ vector<MatrixXd> trainOneSentence(SkipGram& skipgram_model, WordVec& word_vec, s
 	for (int w = 0; w < words.size(); w++)
 	{
 		pos_of_word.push_back(word_vec.m_word_id[words[w]]);
-	}
-
-	//get global context
-	RowVectorXi x_g(words.size());
-	for (int i = 0; i < words.size(); i++)
-	{
-		x_g(i) = pos_of_word[i];
 	}
 
 	//train one sentence

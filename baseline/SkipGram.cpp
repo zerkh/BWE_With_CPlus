@@ -66,8 +66,8 @@ vector<MatrixXd> SkipGram::backward(WordVec& word_vec, int x, RowVectorXi c)
 	}
 
 	vector<MatrixXd> derivation;
-	derivation.push_back(dW);
 	derivation.push_back(dword_emb);
+	derivation.push_back(dW);
 
 	return derivation;
 }
