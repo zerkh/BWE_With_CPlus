@@ -2,7 +2,7 @@
 #include <iostream>
 #include "Config.h"
 #include "Utils.h"
-#include "GCWE.h"
+#include "SkipGram.h"
 #include "TE.h"
 #include "WordVec.h"
 #include "ThreadPara.h"
@@ -14,17 +14,12 @@ Baseline of our work
 Reference Zou EMNLP 2013
 Author kh
 */
-vector<MatrixXd> trainOneSentence(GCWE& gcwe_model, TE& te_model, WordVec src_word_vec, WordVec& tgt_word_vec, string sentence, int window_size, double learning_rate, double lambda)
+vector<MatrixXd> trainOneSentence(SkipGram& skipgram_model, TE& te_model, WordVec src_word_vec, WordVec& tgt_word_vec, string sentence, int window_size, double learning_rate, double lambda)
 {
 
 	//derivation items
 	MatrixXd s_dword_emb = MatrixXd::Zero(tgt_word_vec.word_emb.rows(), tgt_word_vec.word_emb.cols());
-	MatrixXd s_dW2 = MatrixXd::Zero(gcwe_model.W2.rows(), gcwe_model.W2.cols());
-	MatrixXd s_dW1 = MatrixXd::Zero(gcwe_model.W1.rows(), gcwe_model.W1.cols());
-	RowVectorXd s_db1 = RowVectorXd::Zero(gcwe_model.b1.cols());
-	MatrixXd s_dWg2 = MatrixXd::Zero(gcwe_model.Wg2.rows(), gcwe_model.Wg2.cols());
-	MatrixXd s_dWg1 = MatrixXd::Zero(gcwe_model.Wg1.rows(), gcwe_model.Wg1.cols());
-	RowVectorXd s_dbg1 = RowVectorXd::Zero(gcwe_model.bg1.cols());
+	MatrixXd s_dW = MatrixXd::Zero(skipgram_model.W.rows(), skipgram_model.W.cols());
 
 
 	vector<string> words = splitBySpace(sentence);
@@ -46,17 +41,15 @@ vector<MatrixXd> trainOneSentence(GCWE& gcwe_model, TE& te_model, WordVec src_wo
 	//train one sentence
 	for (int w = 0; w < words.size(); w++)
 	{
-		RowVectorXi x = getWindow(tgt_word_vec, sentence, window_size, w);
+		RowVectorXi c = getWindow(tgt_word_vec, sentence, window_size, w);
 
-		vector<MatrixXd> derivations = gcwe_model.backward(tgt_word_vec, x, x_g);
+		int x = c(window_size - 1);
+		c = c.head(window_size - 1);
+
+		vector<MatrixXd> derivations = skipgram_model.backward(tgt_word_vec, x, c);
 
 		s_dword_emb += derivations[0];
-		s_dW1 += derivations[1];
-		s_db1 += derivations[2];
-		s_dW2 += derivations[3];
-		s_dWg1 += derivations[4];
-		s_dbg1 += derivations[5];
-		s_dWg2 += derivations[6];
+		s_dW += derivations[1];
 	}
 
 	vector<MatrixXd> derivations = te_model.backward(src_word_vec, tgt_word_vec);
@@ -66,32 +59,11 @@ vector<MatrixXd> trainOneSentence(GCWE& gcwe_model, TE& te_model, WordVec src_wo
 		te_dword_emb.row(tgt_word_vec.m_word_id[words[w]]) = derivations[0].row(tgt_word_vec.m_word_id[words[w]]);
 	}
 
-	s_dword_emb /= words.size();
-	s_dW1 /= words.size();
-	s_db1 /= words.size();
-	s_dW2 /= words.size();
-	s_dWg1 /= words.size();
-	s_dbg1 /= words.size();
-	s_dWg2 /= words.size();
-
 	s_dword_emb += (lambda*te_dword_emb);
-
-	/*word_vec.word_emb += (s_dword_emb*learning_rate);
-	gcwe_model.W1 += (s_dW1*learning_rate);
-	gcwe_model.b1 += (s_db1*learning_rate);
-	gcwe_model.W2 += (s_dW2*learning_rate);
-	gcwe_model.Wg1 += (s_dWg1*learning_rate);
-	gcwe_model.bg1 += (s_dbg1*learning_rate);
-	gcwe_model.Wg2 += (s_dWg2*learning_rate);*/
 
 	derivations.clear();
 	derivations.push_back(s_dword_emb);
-	derivations.push_back(s_dW1);
-	derivations.push_back(s_db1);
-	derivations.push_back(s_dW2);
-	derivations.push_back(s_dWg1);
-	derivations.push_back(s_dbg1);
-	derivations.push_back(s_dWg2);
+	derivations.push_back(s_dW);
 
 	return derivations;
 }
@@ -105,21 +77,16 @@ static void* deepThread(void* arg)
 	{
 		int cur_sen = rand() / gt->sentences.size();
 
-		vector<MatrixXd> derivations = trainOneSentence(gt->gcwe_model, gt->te_model, gt->src_word_vec, gt->tgt_word_vec, gt->sentences[cur_sen], gt->window_size, gt->learning_rate, gt->lambda);
+		vector<MatrixXd> derivations = trainOneSentence(gt->skipgram_model, gt->te_model, gt->src_word_vec, gt->tgt_word_vec, gt->sentences[cur_sen], gt->window_size, gt->learning_rate, gt->lambda);
 
 		gt->dword_emb += derivations[0];
-		gt->dW1 += derivations[1];
-		gt->db1 += derivations[2];
-		gt->dW2 += derivations[3];
-		gt->dWg1 += derivations[4];
-		gt->dbg1 += derivations[5];
-		gt->dWg2 += derivations[6];
+		gt->dW += derivations[1];
 	}
 
 	pthread_exit(NULL);
 }
 
-void trainTgtWordVec(Config conf, GCWE& gcwe_model, TE& te_model, WordVec src_word_vec, WordVec& tgt_word_vec, string tgt_raw_file, double learning_rate, int epoch, int branch_size, int window_size)
+void trainTgtWordVec(Config conf, SkipGram& skipgram_model, TE& te_model, WordVec src_word_vec, WordVec& tgt_word_vec, string tgt_raw_file, double learning_rate, int epoch, int branch_size, int window_size)
 {
 	int thread_num = atoi(conf.get_para("thread_num").c_str());
 	double lambda = atof(conf.get_para("lambda").c_str());
@@ -155,14 +122,14 @@ void trainTgtWordVec(Config conf, GCWE& gcwe_model, TE& te_model, WordVec src_wo
 	TEThread* threadpara = new TEThread[thread_num];
 	for (int i = 0; i < thread_num - 1; i++)
 	{
-		threadpara[i].init(gcwe_model, te_model, src_word_vec, tgt_word_vec, tgt_word_vec.word_dim, gcwe_model.hidden_dim, window_size, learning_rate, lambda);
+		threadpara[i].init(skipgram_model, te_model, src_word_vec, tgt_word_vec, tgt_word_vec.word_dim, window_size, learning_rate, lambda);
 		for (int i = ind; i < ind + sentence_per_thread; i++)
 		{
 			threadpara[i].sentences.push_back(sentences[i]);
 		}
 		ind += sentence_per_thread;
 	}
-	threadpara[thread_num - 1].init(gcwe_model, te_model, src_word_vec, tgt_word_vec, tgt_word_vec.word_dim, gcwe_model.hidden_dim, window_size, learning_rate, lambda);
+	threadpara[thread_num - 1].init(skipgram_model, te_model, src_word_vec, tgt_word_vec, tgt_word_vec.word_dim, window_size, learning_rate, lambda);
 	threadpara[thread_num - 1].batch_size = branch_size - thread_num*sentence_branch;
 	for (int i = ind; i < sentences.size(); i++)
 	{
@@ -183,42 +150,26 @@ void trainTgtWordVec(Config conf, GCWE& gcwe_model, TE& te_model, WordVec src_wo
 
 		//update
 		MatrixXd s_dword_emb = MatrixXd::Zero(tgt_word_vec.word_emb.rows(), tgt_word_vec.word_emb.cols());
-		MatrixXd s_dW2 = MatrixXd::Zero(gcwe_model.W2.rows(), gcwe_model.W2.cols());
-		MatrixXd s_dW1 = MatrixXd::Zero(gcwe_model.W1.rows(), gcwe_model.W1.cols());
-		RowVectorXd s_db1 = RowVectorXd::Zero(gcwe_model.b1.cols());
-		MatrixXd s_dWg2 = MatrixXd::Zero(gcwe_model.Wg2.rows(), gcwe_model.Wg2.cols());
-		MatrixXd s_dWg1 = MatrixXd::Zero(gcwe_model.Wg1.rows(), gcwe_model.Wg1.cols());
-		RowVectorXd s_dbg1 = RowVectorXd::Zero(gcwe_model.bg1.cols());
+		MatrixXd s_dW = MatrixXd::Zero(skipgram_model.W.rows(), skipgram_model.W.cols());
 
 		for (int t = 0; t < thread_num; t++)
 		{
 			s_dword_emb += threadpara[t].dword_emb;
 
-			s_dW1 += threadpara[t].dW1;
-			s_db1 += threadpara[t].db1;
-			s_dW2 += threadpara[t].dW2;
-
-			s_dWg1 += threadpara[t].dWg1;
-			s_dbg1 += threadpara[t].dbg1;
-			s_dWg2 += threadpara[t].dWg2;
+			s_dW += threadpara[t].dW;
 
 			threadpara[t].clear();
 		}
 
 		tgt_word_vec.word_emb += (learning_rate*s_dword_emb / branch_size);
 
-		gcwe_model.W1 += (learning_rate*s_dW1 / branch_size);
-		gcwe_model.b1 += (learning_rate*s_db1 / branch_size);
-		gcwe_model.W2 += (learning_rate*s_dW2 / branch_size);
-		gcwe_model.Wg1 += (learning_rate*s_dWg1 / branch_size);
-		gcwe_model.bg1 += (learning_rate*s_dbg1 / branch_size);
-		gcwe_model.Wg2 += (learning_rate*s_dWg2 / branch_size);
+		skipgram_model.W += (learning_rate*s_dW / branch_size);
 
 		cout << "Epoch " << e + 1 << " complete!" << endl;
 
 		for (int t = 0; t < thread_num; t++)
 		{
-			threadpara[t].update(gcwe_model, te_model, src_word_vec, tgt_word_vec);
+			threadpara[t].update(skipgram_model, te_model, src_word_vec, tgt_word_vec);
 		}
 	}
 
@@ -238,7 +189,6 @@ int main()
 	string output_dir = conf.get_para("output_dir");
 	int hidden_dim = atoi(conf.get_para("hidden_dim").c_str());
 	int window_size = atoi(conf.get_para("window_size").c_str());
-	int neg_sample = atoi(conf.get_para("neg_sample").c_str());
 	double learning_rate = atof(conf.get_para("learning_rate").c_str());
 	int epoch = atoi(conf.get_para("epoch").c_str());
 	int branch_size = atoi(conf.get_para("branch_size").c_str());
@@ -258,7 +208,7 @@ int main()
 
 	//init tgt GCWE model and translation-equivalence
 	cout << "Init tgt GCWE model and TE model ......" << endl;
-	GCWE gcwe_model(word_dim, hidden_dim, window_size, neg_sample);
+	SkipGram skipgram_model(tgt_word_vec.vocb_size, word_dim);
 	TE te_model(src_word_vec, tgt_word_vec);
 
 	//init target word vector with equivalence and source word vector
@@ -270,7 +220,7 @@ int main()
 	//training
 	cout << "Start training......" << endl;
 	start_clock = clock();
-	trainTgtWordVec(conf, gcwe_model, te_model, src_word_vec, tgt_word_vec, tgt_raw_file, learning_rate, epoch, branch_size, window_size);
+	trainTgtWordVec(conf, skipgram_model, te_model, src_word_vec, tgt_word_vec, tgt_raw_file, learning_rate, epoch, branch_size, window_size);
 	end_clock = clock();
 	cout << "Complete to train word vectors! The cost of time is " << (end_clock - start_clock) / CLOCKS_PER_SEC << endl;
 
@@ -283,7 +233,7 @@ int main()
 
 	cout << "Start saving tgt GCWE model......" << endl;
 	start_clock = clock();
-	gcwe_model.saveModel(tgt_gcwe_file);
+	skipgram_model.saveModel(tgt_gcwe_file);
 	end_clock = clock();
 	cout << "Complete to save tgt GCWE model! The cost of time is " << (end_clock - start_clock) / CLOCKS_PER_SEC << endl;
 
