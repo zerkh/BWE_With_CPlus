@@ -82,9 +82,11 @@ public:
 				WordVec src_word_vec, WordVec tgt_word_vec,
 				int word_dim, int window_size, double learning_rate, double lambda)
 	{
-		dword_emb = MatrixXd::Zero(tgt_word_vec.vocb_size, word_dim);
+		src_dword_emb = MatrixXd::Zero(src_word_vec.vocb_size, word_dim);
+		src_dW = MatrixXd::Zero(word_dim, src_word_vec.vocb_size);
 
-		dW = MatrixXd::Zero(window_size*word_dim, hidden_dim);
+		tgt_dword_emb = MatrixXd::Zero(tgt_word_vec.vocb_size, word_dim);
+		tgt_dW = MatrixXd::Zero(word_dim, tgt_word_vec.vocb_size);
 
 		this->src_skipgram_model = src_skipgram;
 		this->tgt_skipgram_model = tgt_skipgram;
@@ -113,9 +115,11 @@ public:
 
 	void clear()
 	{
-		dword_emb = MatrixXd::Zero(tgt_word_vec.vocb_size, word_dim);
+		src_dword_emb = MatrixXd::Zero(src_word_vec.vocb_size, word_dim);
+		src_dW = MatrixXd::Zero(word_dim, src_word_vec.vocb_size);
 
-		dW = MatrixXd::Zero(word_dim, tgt_word_vec.vocb_size);
+		tgt_dword_emb = MatrixXd::Zero(tgt_word_vec.vocb_size, word_dim);
+		tgt_dW = MatrixXd::Zero(word_dim, tgt_word_vec.vocb_size);
 	}
 };
 
