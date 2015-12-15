@@ -210,7 +210,7 @@ public:
 		}
 	}
 
-	void saveWordVec(string output_dir)
+	void saveWordVec(string output_dir, string prefix)
 	{
 		time_t t = time(0);
 
@@ -219,7 +219,7 @@ public:
 		string day = to_string(now->tm_mday);
 		string hour = to_string(now->tm_hour);
 
-		string filename = output_dir + mon + "-" + day + "-" + hour + "-src.vec";
+		string filename = output_dir + mon + "-" + day + "-" + hour + "-" + prefix + ".vec";
 	
 		ofstream out(filename.c_str(), ios::out);
 

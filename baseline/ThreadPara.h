@@ -6,56 +6,39 @@
 #include "TE.h"
 #include "SkipGram.h"
 
-class GCWEThread
+class SkipGramThread
 {
 public:
 	MatrixXd dword_emb;
-	MatrixXd dW1;
-	RowVectorXd db1;
-	MatrixXd dW2;
-	RowVectorXd db2;
-	MatrixXd dWg1;
-	RowVectorXd dbg1;
-	MatrixXd dWg2;
-	RowVectorXd dbg2;
+	MatrixXd dW;
 
 	int word_dim;
-	int hidden_dim;
 	int window_size;
 	int batch_size;
 	double learning_rate;
 	vector<string> sentences;
-	GCWE gcwe_model;
+	SkipGram skipgram_model;
 	WordVec word_vec;
 
-	GCWEThread() {};
+	SkipGramThread() {};
 
-	void init(GCWE gcwe, WordVec word_vec, int word_dim, int hidden_dim, int window_size, double learning_rate)
+	void init(SkipGram skipgram, WordVec word_vec, int word_dim, int window_size, double learning_rate)
 	{
 		dword_emb = MatrixXd::Zero(word_vec.vocb_size, word_dim);
 
-		dW1 = MatrixXd::Zero(window_size*word_dim, hidden_dim);
-		db1 = RowVectorXd::Zero(hidden_dim);
-		dW2 = MatrixXd::Zero(hidden_dim, 1);
-		db2 = RowVectorXd::Zero(1);
+		dW = MatrixXd::Zero(word_dim, word_vec.vocb_size);
 
-		dWg1 = MatrixXd::Zero(2 * word_dim, hidden_dim);
-		dbg1 = RowVectorXd::Zero(hidden_dim);
-		dWg2 = MatrixXd::Zero(hidden_dim, 1);
-		dbg2 = RowVectorXd::Zero(1);
-
-		gcwe_model = gcwe;
+		skipgram_model = skipgram;
 		this->word_vec = word_vec;
 
 		this->learning_rate = learning_rate;
 		this->word_dim = word_dim;
-		this->hidden_dim = hidden_dim;
 		this->window_size = window_size;
 	}
 
-	void update(GCWE gcwe, WordVec word_vec)
+	void update(SkipGram skipgram, WordVec word_vec)
 	{
-		this->gcwe_model = gcwe;
+		this->skipgram_model = skipgram;
 		this->word_vec = word_vec;
 	}
 
@@ -63,23 +46,17 @@ public:
 	{
 		dword_emb = MatrixXd::Zero(word_vec.vocb_size, word_dim);
 
-		dW1 = MatrixXd::Zero(window_size*word_dim, hidden_dim);
-		db1 = RowVectorXd::Zero(hidden_dim);
-		dW2 = MatrixXd::Zero(hidden_dim, 1);
-		db2 = RowVectorXd::Zero(1);
-
-		dWg1 = MatrixXd::Zero(2 * word_dim, hidden_dim);
-		dbg1 = RowVectorXd::Zero(hidden_dim);
-		dWg2 = MatrixXd::Zero(hidden_dim, 1);
-		dbg2 = RowVectorXd::Zero(1);
+		dW = MatrixXd::Zero(word_dim, word_vec.vocb_size);
 	}
 };
 
 class TEThread
 {
 public:
-	MatrixXd dword_emb;
-	MatrixXd dW;
+	MatrixXd src_dword_emb;
+	MatrixXd src_dW;
+	MatrixXd tgt_dword_emb;
+	MatrixXd tgt_dW;
 
 	int word_dim;
 	int hidden_dim;
@@ -89,24 +66,32 @@ public:
 	double lambda;
 
 	MatrixXd alignTable;
-	vector<string> sentences;
-	SkipGram skipgram_model;
+	vector<string> src_sentences;
+	vector<string> tgt_sentences;
+	SkipGram src_skipgram_model;
+	SkipGram tgt_skipgram_model;
 	WordVec src_word_vec;
 	WordVec tgt_word_vec;
-	TE te_model;
+	TE src_te_model;
+	TE tgt_te_model;
 
 	TEThread() {};
 
-	void init(SkipGram skipgram, TE te, WordVec src_word_vec, WordVec tgt_word_vec, int word_dim, int window_size, double learning_rate, double lambda)
+	void init(SkipGram src_skipgram, SkipGram tgt_skipgram,
+				TE src_te, TE tgt_te,
+				WordVec src_word_vec, WordVec tgt_word_vec,
+				int word_dim, int window_size, double learning_rate, double lambda)
 	{
 		dword_emb = MatrixXd::Zero(tgt_word_vec.vocb_size, word_dim);
 
 		dW = MatrixXd::Zero(window_size*word_dim, hidden_dim);
 
-		skipgram_model = skipgram;
+		this->src_skipgram_model = src_skipgram;
+		this->tgt_skipgram_model = tgt_skipgram;
 		this->src_word_vec = src_word_vec;
 		this->tgt_word_vec = tgt_word_vec;
-		te_model = te;
+		this->src_te_model = src_te;
+		this->tgt_te_model = tgt_te;
 
 		this->lambda = lambda;
 		this->learning_rate = learning_rate;
@@ -114,10 +99,14 @@ public:
 		this->window_size = window_size;
 	}
 
-	void update(SkipGram skipgram_model, TE te_model, WordVec src_word_vec, WordVec tgt_word_vec)
+	void update(SkipGram src_skipgram_model, SkipGram tgt_skipgram_model,
+				TE src_te_model, TE tgt_te_model,
+				WordVec src_word_vec, WordVec tgt_word_vec)
 	{
-		this->skipgram_model = skipgram_model;
-		this->te_model = te_model;
+		this->src_skipgram_model = src_skipgram_model;
+		this->tgt_skipgram_model = tgt_skipgram_model;
+		this->src_te_model = src_te_model;
+		this->tgt_te_model = tgt_te_model;
 		this->src_word_vec = src_word_vec;
 		this->tgt_word_vec = tgt_word_vec;
 	}
