@@ -12,6 +12,8 @@ double SkipGram::forward(WordVec& word_vec, int x, RowVectorXi c)
 {
 	RowVectorXd U = word_vec.word_emb.row(x) * W;
 
+	U = tanh(U);
+
 	vector<double> probs;
 
 	for (int col = 0; col < U.cols(); col++)
@@ -42,6 +44,8 @@ vector<MatrixXd> SkipGram::backward(WordVec& word_vec, int x, RowVectorXi c)
 {
 	RowVectorXd U = word_vec.word_emb.row(x) * W;
 
+	U = tanh(U);
+
 	vector<double> probs;
 
 	for (int col = 0; col < U.cols(); col++)
@@ -61,8 +65,8 @@ vector<MatrixXd> SkipGram::backward(WordVec& word_vec, int x, RowVectorXi c)
 
 	for (int i = 0; i < c.size(); i++)
 	{
-		dW.col(c(i)) += (word_vec.word_emb.row(x).transpose() * (probs[i] - 1));
-		dword_emb.row(x) += (W.col(c(i)).transpose() * (probs[i] - 1));
+		dW.col(c(i)) += (word_vec.word_emb.row(x).transpose() * (probs[i] - 1) * (1-U(c(i))*U(c(i))));
+		dword_emb.row(x) += (W.col(c(i)).transpose() * (probs[i] - 1) * (1 - U(c(i))*U(c(i))));
 	}
 
 	vector<MatrixXd> derivation;
