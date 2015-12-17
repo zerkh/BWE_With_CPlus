@@ -14,6 +14,33 @@ Baseline of our work
 Reference Zou EMNLP 2013
 Author kh
 */
+
+//                       _oo0oo_
+//                      o8888888o
+//                      88" . "88
+//                      (| -_- |)
+//                      0\  =  /0
+//                    ___/`---'\___
+//                  .' \\|     |// '.
+//                 / \\|||  :  |||// \
+//                / _||||| -:- |||||- \
+//               |   | \\\  -  /// |   |
+//               | \_|  ''\---/''  |_/ |
+//               \  .-\__  '-'  ___/-. /
+//             ___'. .'  /--.--\  `. .'___
+//          ."" '<  `.___\_<|>_/___.' >' "".
+//         | | :  `- \`.;`\ _ /`;.`/ - ` : | |
+//         \  \ `_.   \_ __\ /__ _/   .-` /  /
+//     =====`-.____`.___ \_____/___.-`___.-'=====
+//                       `=---='
+//
+//
+//     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//
+//               ·ð×æ±£ÓÓ         ÓÀÎÞBUG
+//
+//
+
 vector<MatrixXd> trainOneSentence(SkipGram& skipgram_model, TE& te_model, WordVec src_word_vec, WordVec& tgt_word_vec, string sentence, int window_size, double learning_rate, double lambda)
 {
 

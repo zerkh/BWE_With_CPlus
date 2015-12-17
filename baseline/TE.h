@@ -6,6 +6,7 @@
 #include "GCWE.h"
 #include "Utils.h"
 #include <iostream>
+#include "Eigen/SparseQR"
 
 using namespace std;
 using namespace Eigen;
@@ -13,7 +14,7 @@ using namespace Eigen;
 class TE
 {
 public:
-	MatrixXd alignTable;
+	SparseMatrix<double> alignTable;
 	int src_vocb_size;
 	int tgt_vocb_size;
 

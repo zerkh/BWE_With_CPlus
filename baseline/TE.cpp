@@ -5,7 +5,7 @@ TE::TE(WordVec src_word_vec, WordVec tgt_word_vec)
 	src_vocb_size = src_word_vec.vocb_size;
 	tgt_vocb_size = tgt_word_vec.vocb_size;
 
-	alignTable = MatrixXd::Zero(tgt_vocb_size, src_vocb_size);
+	alignTable = SparseMatrix<double>(tgt_vocb_size, src_vocb_size);
 }
 
 /*
@@ -16,13 +16,16 @@ void TE::readAlignTable(string filename, WordVec src_word_vec, WordVec tgt_word_
 {
 	ifstream in(filename.c_str(), ios::in);
 
+	vector<Triplet<double> > tripletList;
 	string line;
 	while (getline(in, line))
 	{
 		vector<string> components = splitBySpace(line);
 
-		alignTable(tgt_word_vec.m_word_id[components[1]], src_word_vec.m_word_id[components[0]]) = atoi(components[2].c_str())+1;
+		tripletList.push_back(Triplet<double>(tgt_word_vec.m_word_id[components[1]], src_word_vec.m_word_id[components[0]], atoi(components[2].c_str()) + 1) );
 	}
+
+	alignTable.setFromTriplets(tripletList.begin(), tripletList.end());
 
 	for (int row = 0; row < alignTable.rows(); row++)
 	{
@@ -38,7 +41,7 @@ void TE::initTgtWordVec(WordVec src_word_vec, WordVec& tgt_word_vec)
 	{
 		for (int s = 0; s < src_vocb_size; s++)
 		{
-			tgt_word_vec.word_emb.row(t) += alignTable(t,s)*src_word_vec.word_emb.row(s);
+			tgt_word_vec.word_emb.row(t) += alignTable.coeffRef(t,s)*src_word_vec.word_emb.row(s);
 		}
 	}
 }
