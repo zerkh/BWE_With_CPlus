@@ -254,13 +254,11 @@ int main()
 	string src_vocab_file = conf.get_para("src_vocab_file");
 	string output_dir = conf.get_para("output_dir");
 	int word_dim = atoi(conf.get_para("word_dim").c_str());
-	int hidden_dim = atoi(conf.get_para("hidden_dim").c_str());
 	int window_size = atoi(conf.get_para("window_size").c_str());
-	int neg_sample = atoi(conf.get_para("neg_sample").c_str());
 	double learning_rate = atof(conf.get_para("learning_rate").c_str());
 	int epoch = atoi(conf.get_para("epoch").c_str());
 	int branch_size = atoi(conf.get_para("branch_size").c_str());
-	string src_gcwe_file = conf.get_para("src_gcwe_file");
+	string src_skipgram_file = conf.get_para("src_skipgram_file");
 
 	//init any
 	double start_clock, end_clock;
@@ -278,6 +276,7 @@ int main()
 	end_clock = clock();
 	cout << "Complete to train word vectors! The cost of time is " << (end_clock - start_clock) / CLOCKS_PER_SEC << endl;
 
+	//saving params
 	cout << "Start saving word vector......" << endl;
 	start_clock = clock();
 	src_word_vec.saveWordVec(output_dir);
@@ -286,7 +285,7 @@ int main()
 
 	cout << "Start saving skip-gram model......" << endl;
 	start_clock = clock();
-	skipgram_model.saveModel(src_gcwe_file);
+	skipgram_model.saveModel(src_skipgram_file);
 	end_clock = clock();
 	cout << "Complete to save skip-gram model! The cost of time is " << (end_clock - start_clock) / CLOCKS_PER_SEC << endl;
 
