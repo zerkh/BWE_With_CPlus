@@ -1,6 +1,7 @@
-#include "Eigen/Core"
 #include "GCWE.h"
 #include "Utils.h"
+#include "Config.h"
+#include "ThreadPara.h"
 #include <iostream>
 using namespace std;
 using namespace Eigen;
@@ -180,3 +181,43 @@ vector<MatrixXd> GCWE::backward(WordVec& word_vec, RowVectorXi x, RowVectorXi x_
 
 	return derivations;
 }
+
+void GCWE::saveModel(string save_file)
+{
+	ofstream out(save_file.c_str(), ios::out);
+
+	out << "W1:" << endl;
+	out << W1 << endl;
+
+	out << "b1:" << endl;
+	out << b1 << endl;
+
+	out << "W2:" << endl;
+	out << W2 << endl;
+
+	out << "b2:" << endl;
+	out << b2 << endl;
+
+	out << "Wg1:" << endl;
+	out << Wg1 << endl;
+
+	out << "bg1:" << endl;
+	out << bg1 << endl;
+
+	out << "Wg2:" << endl;
+	out << Wg2 << endl;
+
+	out << "bg2:" << endl;
+	out << bg2 << endl;
+
+	out.close();
+}
+
+void GCWE::loadModel(string model_file)
+{
+	ifstream in(model_file.c_str(), ios::in);
+
+
+	in.close();
+}
+

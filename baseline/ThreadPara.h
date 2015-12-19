@@ -15,6 +15,8 @@ public:
 	int word_dim;
 	int window_size;
 	int batch_size;
+	int src_word_count;
+	int tgt_word_count;
 	double learning_rate;
 	vector<string> sentences;
 	SkipGram skipgram_model;
@@ -31,6 +33,8 @@ public:
 		skipgram_model = skipgram;
 		this->word_vec = word_vec;
 
+		this->src_word_count = 0;
+		this->tgt_word_count = 0;
 		this->learning_rate = learning_rate;
 		this->word_dim = word_dim;
 		this->window_size = window_size;
@@ -47,6 +51,9 @@ public:
 		dword_emb = MatrixXd::Zero(word_vec.vocb_size, word_dim);
 
 		dW = MatrixXd::Zero(word_dim, word_vec.vocb_size);
+
+		src_word_count = 0;
+		tgt_word_count = 0;
 	}
 };
 
@@ -58,6 +65,8 @@ public:
 	MatrixXd tgt_dword_emb;
 	MatrixXd tgt_dW;
 
+	int src_word_count;
+	int tgt_word_count;
 	int word_dim;
 	int hidden_dim;
 	int window_size;
@@ -95,6 +104,8 @@ public:
 		this->src_te_model = src_te;
 		this->tgt_te_model = tgt_te;
 
+		this->src_word_count = 0;
+		this->tgt_word_count = 0;
 		this->lambda = lambda;
 		this->learning_rate = learning_rate;
 		this->word_dim = word_dim;
@@ -120,6 +131,9 @@ public:
 
 		tgt_dword_emb = MatrixXd::Zero(tgt_word_vec.vocb_size, word_dim);
 		tgt_dW = MatrixXd::Zero(word_dim, tgt_word_vec.vocb_size);
+
+		src_word_count = 0;
+		tgt_word_count = 0;
 	}
 };
 

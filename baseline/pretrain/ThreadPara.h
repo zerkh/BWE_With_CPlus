@@ -11,6 +11,7 @@ public:
 	MatrixXd dW;
 
 	int word_dim;
+	int word_count;
 	int window_size;
 	int batch_size;
 	double learning_rate;
@@ -29,6 +30,7 @@ public:
 		skipgram_model = skipgram;
 		this->word_vec = word_vec;
 
+		this->word_count = 0;
 		this->learning_rate = learning_rate;
 		this->word_dim = word_dim;
 		this->window_size = window_size;
@@ -45,6 +47,8 @@ public:
 		dword_emb = MatrixXd::Zero(word_vec.vocb_size, word_dim);
 
 		dW = MatrixXd::Zero(word_dim, word_vec.vocb_size);
+
+		word_count = 0;
 	}
 };
 

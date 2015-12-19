@@ -111,6 +111,7 @@ static void* deepThread(void* arg)
 
 		gt->src_dword_emb += derivations[0];
 		gt->src_dW += derivations[1];
+		gt->src_word_count += gt->src_sentences[cur_src_sen].size();
 
 		derivations.clear();
 
@@ -120,6 +121,7 @@ static void* deepThread(void* arg)
 
 		gt->tgt_dword_emb += derivations[0];
 		gt->tgt_dW += derivations[1];
+		gt->tgt_word_count += gt->tgt_sentences[cur_tgt_sen].size();
 	}
 
 	pthread_exit(NULL);
@@ -225,23 +227,27 @@ void trainWordVec(Config conf, SkipGram& src_skipgram_model, SkipGram& tgt_skipg
 		MatrixXd s_src_dW = MatrixXd::Zero(src_skipgram_model.W.rows(), src_skipgram_model.W.cols());
 		MatrixXd s_tgt_dword_emb = MatrixXd::Zero(tgt_word_vec.word_emb.rows(), tgt_word_vec.word_emb.cols());
 		MatrixXd s_tgt_dW = MatrixXd::Zero(tgt_skipgram_model.W.rows(), tgt_skipgram_model.W.cols());
+		int src_word_count = 0;
+		int tgt_word_count = 0;
 
 		for (int t = 0; t < thread_num; t++)
 		{
 			s_src_dword_emb += threadpara[t].src_dword_emb;
 			s_src_dW += threadpara[t].src_dW;
+			src_word_count += threadpara[t].src_word_count;
 
 			s_tgt_dword_emb += threadpara[t].tgt_dword_emb;
 			s_tgt_dW += threadpara[t].tgt_dW;
+			tgt_word_count += threadpara[t].tgt_word_count;
 
 			threadpara[t].clear();
 		}
 
-		src_word_vec.word_emb += (learning_rate*s_src_dword_emb / branch_size);
-		tgt_word_vec.word_emb += (learning_rate*s_tgt_dword_emb / branch_size);
+		src_word_vec.word_emb += (learning_rate*s_src_dword_emb / src_word_count);
+		tgt_word_vec.word_emb += (learning_rate*s_tgt_dword_emb / tgt_word_count);
 
-		src_skipgram_model.W += (learning_rate*s_src_dW / branch_size);
-		tgt_skipgram_model.W += (learning_rate*s_tgt_dW / branch_size);
+		src_skipgram_model.W += (learning_rate*s_src_dW / src_word_count);
+		tgt_skipgram_model.W += (learning_rate*s_tgt_dW / tgt_word_count);
 
 		cout << "Epoch " << e + 1 << " complete!" << endl;
 

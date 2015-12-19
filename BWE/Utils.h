@@ -1,9 +1,58 @@
-#pragma once
+#ifndef __UTILS__
+#define __UTILS__
 
 #include "Eigen/Core"
 #include <iostream>
 #include <vector>
 #include <sstream>
+#include <string>
+#include "Eigen/SparseQR"
+#include <pthread.h>
+using namespace std;
+using namespace Eigen;
+
+inline string strip_str(const string& s, const string chs = " \t\n")
+{
+	if (s.empty()) {
+		return s;
+	}
+
+	int i = 0;
+	while (i < (int)s.size() && chs.find(s[i]) != string::npos) {
+		++i;
+	}
+
+	int j = (int)s.size() - 1;
+	while (j >= 0 && chs.find(s[j]) != string::npos) {
+		--j;
+	}
+
+	++j;
+
+	return i >= j ? "" : s.substr(i, j - i);
+};
+
+/*
+inline string to_string(int i)
+{
+	vector<char> pos;
+	while (i / 10 != 0)
+	{
+		pos.push_back(i % 10 + '0');
+		i /= 10;
+	}
+	pos.push_back(i + '0');
+
+	string str = "";
+
+	for (int i = pos.size() - 1; i >= 0; i--)
+	{
+		str += pos[i];
+	}
+
+	return str;
+}
+*/
 
 inline RowVectorXd tanh(RowVectorXd v)
 {
@@ -58,7 +107,7 @@ inline vector<string> splitBySpace(string line)
 	return words;
 }
 
-vector<string> splitString(string& s, string& c)
+inline vector<string> splitString(string& s, const string c)
 {
 	vector<string> v;
 	string::size_type pos1, pos2;
@@ -79,3 +128,4 @@ vector<string> splitString(string& s, string& c)
 	return v;
 }
 
+#endif

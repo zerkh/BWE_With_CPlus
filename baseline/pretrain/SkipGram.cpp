@@ -100,6 +100,7 @@ static void* deepThread(void* arg)
 		vector<MatrixXd> derivations = trainOneSentence(gt->skipgram_model, gt->word_vec, gt->sentences[cur_sen], gt->window_size, gt->learning_rate);
 		gt->dword_emb += derivations[0];
 		gt->dW += derivations[1];
+		gt->word_count += gt->sentences[cur_sen].size();
 	}
 
 	pthread_exit(NULL);
@@ -223,6 +224,7 @@ void train(Config conf, SkipGram& skipgram_model, WordVec& word_vec, string src_
 		//update
 		MatrixXd s_dword_emb = MatrixXd::Zero(word_vec.word_emb.rows(), word_vec.word_emb.cols());
 		MatrixXd s_dW = MatrixXd::Zero(skipgram_model.W.rows(), skipgram_model.W.cols());
+		int word_count = 0;
 
 		for (int t = 0; t < thread_num; t++)
 		{
@@ -230,12 +232,14 @@ void train(Config conf, SkipGram& skipgram_model, WordVec& word_vec, string src_
 
 			s_dW += threadpara[t].dW;
 
+			word_count += threadpara[t].word_count;
+
 			threadpara[t].clear();
 		}
 
-		word_vec.word_emb += (learning_rate*s_dword_emb / branch_size);
+		word_vec.word_emb += (learning_rate*s_dword_emb / word_count);
 
-		skipgram_model.W += (learning_rate*s_dW / branch_size);
+		skipgram_model.W += (learning_rate*s_dW / word_count);
 
 		cout << "Epoch " << e + 1 << " complete!" << endl;
 

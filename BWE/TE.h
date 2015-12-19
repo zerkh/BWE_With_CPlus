@@ -1,9 +1,12 @@
-#pragma once
+#ifndef __TE__
+#define __TE__
+
 #include "Eigen/Core"
 #include "WordVec.h"
 #include "GCWE.h"
 #include "Utils.h"
 #include <iostream>
+#include "Eigen/SparseQR"
 
 using namespace std;
 using namespace Eigen;
@@ -11,9 +14,11 @@ using namespace Eigen;
 class TE
 {
 public:
-	MatrixXd alignTable;
+	SparseMatrix<double> alignTable;
 	int src_vocb_size;
 	int tgt_vocb_size;
+
+	TE() {};
 
 	TE(WordVec src_word_vec, WordVec tgt_word_vec);
 
@@ -25,3 +30,5 @@ public:
 
 	vector<MatrixXd> backward(WordVec src_word_vec, WordVec& tgt_word_vec);
 };
+
+#endif
