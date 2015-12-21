@@ -25,5 +25,5 @@ $(EXE): $(OBJ)
 		$(CC) $(CFLAGS) $(OBJ) $(LDFLAGS) -o $(EXE) -lpthread -lz 
 .PHONY: clean
 clean:
-	 -rm -f core *.o
+	 -rm -f core *.o $(EXE)
 

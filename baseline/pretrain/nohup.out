@@ -62,40 +62,8 @@ Start training epoch 29
 Epoch 29 complete!
 Start training epoch 30
 Epoch 30 complete!
-Start training epoch 31
-Epoch 31 complete!
-Start training epoch 32
-Epoch 32 complete!
-Start training epoch 33
-Epoch 33 complete!
-Start training epoch 34
-Epoch 34 complete!
-Start training epoch 35
-Epoch 35 complete!
-Start training epoch 36
-Epoch 36 complete!
-Start training epoch 37
-Epoch 37 complete!
-Start training epoch 38
-Epoch 38 complete!
-Start training epoch 39
-Epoch 39 complete!
-Start training epoch 40
-Epoch 40 complete!
-Start training epoch 41
-Epoch 41 complete!
-Start training epoch 42
-Epoch 42 complete!
-Start training epoch 43
-Epoch 43 complete!
-Start training epoch 44
-Epoch 44 complete!
-Start training epoch 45
-Epoch 45 complete!
-Start training epoch 46
-Epoch 46 complete!
-Start training epoch 47
-Epoch 47 complete!
-Start training epoch 48
-Epoch 48 complete!
-Start training epoch 49
+Complete to train word vectors! The cost of time is 137205
+Start saving word vector......
+Complete to save word vectors! The cost of time is 5.58684
+Start saving skip-gram model......
+Complete to save skip-gram model! The cost of time is 20.6951
