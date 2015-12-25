@@ -8,29 +8,21 @@ void readAlignTable(SparseMatrix<double>& alignTable, string filename, WordVec s
 	ifstream in(filename.c_str(), ios::in);
 
 	string line;
-	/*
-	int entities = 0;
-	while (getline(in, line))
-	{
-	entities += 1;
-	}
-	in.close();
-	in.open(filename.c_str(), ios::in);
-	*/
+
 	vector<Triplet<double> > tripletList;
-	//	tripletList.reserve(entities);
 	int count = 0;
 
 	while (getline(in, line))
 	{
 		vector<string> components = splitBySpace(line);
 
-		cout << components[0] << " " << components[1] << endl;
-		cout << tgt_word_vec.m_word_id[components[0]] << " " << src_word_vec.m_word_id[components[1]] << endl;
-		int tgt_id = tgt_word_vec.m_word_id[components[0]];
-		int src_id = src_word_vec.m_word_id[components[1]];
-		tripletList.push_back(Triplet<double>(tgt_id, src_id, (double)(atoi(components[2].c_str()) + 1)));
-		cout << tripletList[count].row() << " " << tripletList[count].col() << " " << tripletList[count++].value() << endl;
+		int tgt_id = tgt_word_vec.m_word_id[components[1]];
+		int src_id = src_word_vec.m_word_id[components[0]];
+		double times = atoi(components[2].c_str()) + 1;
+		
+		Triplet<double> t(tgt_id, src_id, times);
+		
+		tripletList.push_back(t);
 	}
 
 	alignTable.setFromTriplets(tripletList.begin(), tripletList.end());
@@ -99,7 +91,7 @@ int main()
 	//init target word vector with equivalence and source word vector
 	start_clock = clock();
 	cout << "Reading alignment table......" << endl;
-	readAlignTable(alignTable, tgt_align_table_file, src_word_vec, tgt_word_vec);
+	readAlignTable(alignTable, src_align_table_file, src_word_vec, tgt_word_vec);
 	end_clock = clock();
 	cout << "Complete to read alignment table! The cost of time is " << (end_clock - start_clock) / CLOCKS_PER_SEC << endl;
 

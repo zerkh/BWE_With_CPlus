@@ -183,7 +183,6 @@ public:
 
 		m_id_word.clear();
 		m_word_id.clear();
-		int cur_id = 0;
 
 		string line;
 		getline(in, line);
@@ -194,6 +193,7 @@ public:
 		word_dim = atoi(first_line[1].c_str());
 
 		word_emb.resize(vocb_size, word_dim);
+		int cur_id = 0;
 
 		//load word vectors
 		while (getline(in, line))
@@ -207,6 +207,7 @@ public:
 			{
 				word_emb(cur_id, i) = atof(word_vec[i + 1].c_str());
 			}
+			cur_id ++;
 		}
 	}
 
