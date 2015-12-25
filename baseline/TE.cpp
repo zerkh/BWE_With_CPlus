@@ -17,29 +17,19 @@ void TE::readAlignTable(string filename, WordVec src_word_vec, WordVec tgt_word_
 	ifstream in(filename.c_str(), ios::in);
 
 	string line;
-/*
-	int entities = 0;
-	while (getline(in, line))
-	{
-		entities += 1;
-	}
-	in.close();
-	in.open(filename.c_str(), ios::in);
-*/
 	vector<Triplet<double> > tripletList;
-//	tripletList.reserve(entities);
-	int count = 0;
 
 	while (getline(in, line))
 	{
 		vector<string> components = splitBySpace(line);
 
-		cout << components[0] << " " << components[1] << endl;
-		cout << tgt_word_vec.m_word_id[components[0]] << " " << src_word_vec.m_word_id[components[1]] << endl;
 		int tgt_id = tgt_word_vec.m_word_id[components[0]];
 		int src_id = src_word_vec.m_word_id[components[1]];
-		tripletList.push_back(Triplet<double>(tgt_id, src_id, (double)(atoi(components[2].c_str()) + 1)) );
-		cout << tripletList[count].row() << " " << tripletList[count].col() << " " << tripletList[count++].value() << endl;
+		double times = atoi(components[2].c_str()) + 1;
+
+		Triplet<double> t(tgt_id, src_id, times);
+
+		tripletList.push_back(t);
 	}
 
 	alignTable.setFromTriplets(tripletList.begin(), tripletList.end());
