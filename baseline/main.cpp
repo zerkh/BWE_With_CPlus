@@ -293,6 +293,7 @@ int main()
 	//load word vector of source language pre-trained by GCWE
 	cout << "Load src word vectors from \"" << conf.get_para("src_word_vec") << "\"......" << endl;
 	src_word_vec.loadWordVec(conf.get_para("src_word_vec"));
+	tgt_word_vec.loadWordVec(conf.get_para("tgt_word_vec"));
 
 	//init tgt skip-gram model and translation-equivalence
 	cout << "Init tgt skip-gram model and TE model ......" << endl;
@@ -311,12 +312,6 @@ int main()
 	tgt_te_model.readAlignTable(tgt_align_table_file, src_word_vec, tgt_word_vec);
 	end_clock = clock();
 	cout << "Complete to read alignment table! The cost of time is " << (end_clock-start_clock) / CLOCKS_PER_SEC << endl;
-
-	cout << "Initializing target word vectors......" << endl;
-	start_clock = clock();
-	tgt_te_model.initTgtWordVec(src_word_vec, tgt_word_vec);
-	end_clock = clock();
-	cout << "Complete to initialize target word vectors! The cost of time is " << (end_clock-start_clock) / CLOCKS_PER_SEC << endl;
 
 	//training
 	cout << "Start training......" << endl;
