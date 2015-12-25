@@ -16,29 +16,29 @@ void TE::readAlignTable(string filename, WordVec src_word_vec, WordVec tgt_word_
 {
 	ifstream in(filename.c_str(), ios::in);
 
-	vector<Triplet<double> > tripletList;
 	string line;
-	int count = 0;
 /*
-	for(map<string,int>::iterator it = tgt_word_vec.m_word_id.begin(); it != tgt_word_vec.m_word_id.end(); it++)
+	int entities = 0;
+	while (getline(in, line))
 	{
-		cout << it->first << " " << it->second << endl;
+		entities += 1;
 	}
-
-	cout << "fuck" << endl;
-	for(map<string,int>::iterator it = src_word_vec.m_word_id.begin(); it != src_word_vec.m_word_id.end(); it++)
-	{
-		cout << it->first << " " << it->second << endl;
-	}
-	cout << "fuck" << endl;
+	in.close();
+	in.open(filename.c_str(), ios::in);
 */
+	vector<Triplet<double> > tripletList;
+//	tripletList.reserve(entities);
+	int count = 0;
 
 	while (getline(in, line))
 	{
 		vector<string> components = splitBySpace(line);
 
 		cout << components[0] << " " << components[1] << endl;
-		tripletList.push_back(Triplet<double>(tgt_word_vec.m_word_id[components[0]], src_word_vec.m_word_id[components[1]], atoi(components[2].c_str()) + 1) );
+		cout << tgt_word_vec.m_word_id[components[0]] << " " << src_word_vec.m_word_id[components[1]] << endl;
+		int tgt_id = tgt_word_vec.m_word_id[components[0]];
+		int src_id = src_word_vec.m_word_id[components[1]];
+		tripletList.push_back(Triplet<double>(tgt_id, src_id, (double)(atoi(components[2].c_str()) + 1)) );
 		cout << tripletList[count].row() << " " << tripletList[count].col() << " " << tripletList[count++].value() << endl;
 	}
 
