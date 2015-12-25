@@ -5,6 +5,7 @@
 #include "WordVec.h"
 #include "GCWE.h"
 #include "Utils.h"
+#include <ctime>
 #include <iostream>
 #include "Eigen/SparseQR"
 

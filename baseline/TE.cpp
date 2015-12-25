@@ -18,11 +18,28 @@ void TE::readAlignTable(string filename, WordVec src_word_vec, WordVec tgt_word_
 
 	vector<Triplet<double> > tripletList;
 	string line;
+	int count = 0;
+/*
+	for(map<string,int>::iterator it = tgt_word_vec.m_word_id.begin(); it != tgt_word_vec.m_word_id.end(); it++)
+	{
+		cout << it->first << " " << it->second << endl;
+	}
+
+	cout << "fuck" << endl;
+	for(map<string,int>::iterator it = src_word_vec.m_word_id.begin(); it != src_word_vec.m_word_id.end(); it++)
+	{
+		cout << it->first << " " << it->second << endl;
+	}
+	cout << "fuck" << endl;
+*/
+
 	while (getline(in, line))
 	{
 		vector<string> components = splitBySpace(line);
 
-		tripletList.push_back(Triplet<double>(tgt_word_vec.m_word_id[components[1]], src_word_vec.m_word_id[components[0]], atoi(components[2].c_str()) + 1) );
+		cout << components[0] << " " << components[1] << endl;
+		tripletList.push_back(Triplet<double>(tgt_word_vec.m_word_id[components[0]], src_word_vec.m_word_id[components[1]], atoi(components[2].c_str()) + 1) );
+		cout << tripletList[count].row() << " " << tripletList[count].col() << " " << tripletList[count++].value() << endl;
 	}
 
 	alignTable.setFromTriplets(tripletList.begin(), tripletList.end());
@@ -31,6 +48,8 @@ void TE::readAlignTable(string filename, WordVec src_word_vec, WordVec tgt_word_
 	{
 		alignTable.row(row) /= alignTable.row(row).sum();
 	}
+
+	in.close();
 }
 
 void TE::initTgtWordVec(WordVec src_word_vec, WordVec& tgt_word_vec)
@@ -39,9 +58,24 @@ void TE::initTgtWordVec(WordVec src_word_vec, WordVec& tgt_word_vec)
 
 	for (int t = 0; t < tgt_vocb_size; t++)
 	{
+		double sum = 0;
+		if(t % 10000 == 0)
+		{
+			cout << "init tgt word_emb " << t << "row" << endl;
+		}
+
+		double start_clock = clock(), end_clock = 0;
 		for (int s = 0; s < src_vocb_size; s++)
 		{
-			tgt_word_vec.word_emb.row(t) += alignTable.coeffRef(t,s)*src_word_vec.word_emb.row(s);
+			if(s % 10000 == 0)
+			{
+				end_clock = clock();
+				cout << sum << endl;
+				cout << "the " << s << " src_emb. The cost of time is " << (end_clock-start_clock) / CLOCKS_PER_SEC << endl;
+				start_clock = clock();
+			}
+			//tgt_word_vec.word_emb.row(t) += alignTable.coeffRef(t,s)*src_word_vec.word_emb.row(s);
+			sum += alignTable.coeffRef(t,s);
 		}
 	}
 }

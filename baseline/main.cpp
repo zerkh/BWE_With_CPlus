@@ -294,7 +294,7 @@ int main()
 	cout << "Load src word vectors from \"" << conf.get_para("src_word_vec") << "\"......" << endl;
 	src_word_vec.loadWordVec(conf.get_para("src_word_vec"));
 
-	//init tgt GCWE model and translation-equivalence
+	//init tgt skip-gram model and translation-equivalence
 	cout << "Init tgt skip-gram model and TE model ......" << endl;
 	SkipGram src_skipgram_model(src_word_vec.vocb_size, word_dim);
 	SkipGram tgt_skipgram_model(tgt_word_vec.vocb_size, word_dim);
@@ -305,11 +305,18 @@ int main()
 	src_skipgram_model.loadModel(src_skipgram_file);
 
 	//init target word vector with equivalence and source word vector
+	start_clock = clock();
 	cout << "Reading alignment table......" << endl;
 	src_te_model.readAlignTable(src_align_table_file, tgt_word_vec, src_word_vec);
 	tgt_te_model.readAlignTable(tgt_align_table_file, src_word_vec, tgt_word_vec);
+	end_clock = clock();
+	cout << "Complete to read alignment table! The cost of time is " << (end_clock-start_clock) / CLOCKS_PER_SEC << endl;
 
+	cout << "Initializing target word vectors......" << endl;
+	start_clock = clock();
 	tgt_te_model.initTgtWordVec(src_word_vec, tgt_word_vec);
+	end_clock = clock();
+	cout << "Complete to initialize target word vectors! The cost of time is " << (end_clock-start_clock) / CLOCKS_PER_SEC << endl;
 
 	//training
 	cout << "Start training......" << endl;

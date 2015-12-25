@@ -181,6 +181,12 @@ public:
 	{
 		ifstream in(filename.c_str(), ios::in);
 
+		if(!in)
+		{
+			cerr << "Cannot open " << filename << endl;
+			exit(-1);
+		}
+
 		m_id_word.clear();
 		m_word_id.clear();
 		int cur_id = 0;
@@ -207,7 +213,11 @@ public:
 			{
 				word_emb(cur_id, i) = atof(word_vec[i + 1].c_str());
 			}
+			
+			cur_id ++;
 		}
+
+		in.close();
 	}
 
 	void saveWordVec(string output_dir, string prefix)
