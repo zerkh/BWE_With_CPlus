@@ -1,5 +1,6 @@
 #Executable
 SKIPGRAM_EXE    = skipgram
+INITTGT = initTgt
 	
 # Compiler, Linker Defines
 CC      = g++

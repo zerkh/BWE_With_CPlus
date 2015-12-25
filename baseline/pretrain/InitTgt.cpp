@@ -107,5 +107,8 @@ int main()
 	end_clock = clock();
 	cout << "Complete to initialize target word vectors! The cost of time is " << (end_clock - start_clock) / CLOCKS_PER_SEC << endl;
 
+	//Save
+	tgt_word_vec.saveWordVec(output_dir, "tgt");
+
 	return 0;
 }
