@@ -44,9 +44,11 @@ void readAlignTable(SparseMatrix<double>& alignTable, string filename, WordVec s
 }
 
 
-void initTgtWordVec(SparseMatrix<double>& alignTable, WordVec src_word_vec, WordVec& tgt_word_vec)
+void initTgtWordVec(SparseMatrix<double>& alignTable, WordVec& src_word_vec, WordVec& tgt_word_vec)
 {
 	tgt_word_vec.word_emb.fill(0.0);
+	tgt_word_vec.word_emb.row(0) = src_word_vec.word_emb.row(0);
+	tgt_word_vec.word_emb.row(1) = src_word_vec.word_emb.row(1);
 
 	for (int t = 0; t < tgt_word_vec.vocb_size; t++)
 	{
@@ -66,8 +68,7 @@ void initTgtWordVec(SparseMatrix<double>& alignTable, WordVec src_word_vec, Word
 				cout << "the " << s << " src_emb. The cost of time is " << (end_clock - start_clock) / CLOCKS_PER_SEC << endl;
 				start_clock = clock();
 			}
-			//tgt_word_vec.word_emb.row(t) += alignTable.coeffRef(t,s)*src_word_vec.word_emb.row(s);
-			sum += alignTable.coeffRef(t, s);
+			tgt_word_vec.word_emb.row(t) += alignTable.coeffRef(t,s)*src_word_vec.word_emb.row(s);
 		}
 	}
 }
@@ -89,6 +90,7 @@ int main()
 	//init word vectors
 	WordVec src_word_vec(word_dim, src_vocab_file);
 	WordVec tgt_word_vec(word_dim, tgt_vocab_file);
+	alignTable = SparseMatrix<double>(tgt_word_vec.vocb_size, src_word_vec.vocb_size);
 
 	//load word vector of source language pre-trained by GCWE
 	cout << "Load src word vectors from \"" << conf.get_para("src_word_vec") << "\"......" << endl;
