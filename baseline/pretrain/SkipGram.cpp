@@ -287,7 +287,7 @@ int main()
 	//saving params
 	cout << "Start saving word vector......" << endl;
 	start_clock = clock();
-	src_word_vec.saveWordVec(output_dir);
+	src_word_vec.saveWordVec(output_dir, "src");
 	end_clock = clock();
 	cout << "Complete to save word vectors! The cost of time is " << (end_clock - start_clock) / CLOCKS_PER_SEC << endl;
 
