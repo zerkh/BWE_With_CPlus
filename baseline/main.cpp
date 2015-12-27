@@ -47,7 +47,7 @@ vector<MatrixXd> trainOneSentence(SkipGram& skipgram_model, TE& te_model, WordVe
 	//derivation items
 	MatrixXd s_dword_emb = MatrixXd::Zero(tgt_word_vec.word_emb.rows(), tgt_word_vec.word_emb.cols());
 	MatrixXd s_dW = MatrixXd::Zero(skipgram_model.W.rows(), skipgram_model.W.cols());
-
+	double start_clock, end_clock;
 
 	vector<string> words = splitBySpace(sentence);
 
@@ -73,13 +73,20 @@ vector<MatrixXd> trainOneSentence(SkipGram& skipgram_model, TE& te_model, WordVe
 		int x = c(window_size - 1);
 		c = c.head(window_size - 1);
 
+		start_clock = clock();
 		vector<MatrixXd> derivations = skipgram_model.backward(tgt_word_vec, x, c);
+		end_clock = clock();
+		//cout << "The time of do a skip-gram backward is " << (end_clock-start_clock)/CLOCKS_PER_SEC << endl;
 
 		s_dword_emb += derivations[0];
 		s_dW += derivations[1];
 	}
 
+	start_clock = clock();
 	vector<MatrixXd> derivations = te_model.backward(src_word_vec, tgt_word_vec);
+	end_clock = clock();
+	//cout << "The time of do a te backward is " << (end_clock-start_clock)/CLOCKS_PER_SEC << endl;
+
 	MatrixXd te_dword_emb = MatrixXd::Zero(s_dword_emb.rows(), s_dword_emb.cols());
 	for (int w = 0; w < words.size(); w++)
 	{
@@ -98,6 +105,7 @@ vector<MatrixXd> trainOneSentence(SkipGram& skipgram_model, TE& te_model, WordVe
 static void* deepThread(void* arg)
 {
 	TEThread* gt = (TEThread*)arg;
+	double start_clock, end_clock;
 
 	srand(time(0));
 	for (int b = 0; b < gt->batch_size; b++)
@@ -105,13 +113,19 @@ static void* deepThread(void* arg)
 		int cur_src_sen = rand() / gt->src_sentences.size();
 		int cur_tgt_sen = rand() / gt->tgt_sentences.size();
 
+		start_clock = clock();
 		vector<MatrixXd> derivations = trainOneSentence(gt->src_skipgram_model, gt->src_te_model, 
 														gt->tgt_word_vec, gt->src_word_vec, gt->src_sentences[cur_src_sen], 
 														gt->window_size, gt->learning_rate, gt->lambda);
+		end_clock = clock();
+		cout << "The time of train a source sentence is " << (end_clock-start_clock)/CLOCKS_PER_SEC << endl;
 
+		start_clock = clock();
 		gt->src_dword_emb += derivations[0];
 		gt->src_dW += derivations[1];
 		gt->src_word_count += gt->src_sentences[cur_src_sen].size();
+		end_clock = clock();
+		//cout << "The time of update is " << (end_clock-start_clock)/CLOCKS_PER_SEC << endl;
 
 		derivations.clear();
 
@@ -175,26 +189,29 @@ void trainWordVec(Config conf, SkipGram& src_skipgram_model, SkipGram& tgt_skipg
 	int tgt_sentence_per_thread = tgt_sentences.size() / thread_num;
 	int src_ind = 0;
 	int tgt_ind = 0;
+
 	TEThread* threadpara = new TEThread[thread_num];
-	for (int i = 0; i < thread_num - 1; i++)
+	for (int t = 0; t < thread_num - 1; t++)
 	{
-		threadpara[i].init(src_skipgram_model, tgt_skipgram_model,
+		threadpara[t].init(src_skipgram_model, tgt_skipgram_model,
 							src_te_model, tgt_te_model,
 							src_word_vec, tgt_word_vec,
 							tgt_word_vec.word_dim, window_size, learning_rate, lambda);
 		for (int i = src_ind; i < src_ind + src_sentence_per_thread; i++)
 		{
-			threadpara[i].src_sentences.push_back(src_sentences[i]);
+			threadpara[t].src_sentences.push_back(src_sentences[i]);
 		}
 
 		for (int i = tgt_ind; i < tgt_ind + tgt_sentence_per_thread; i++)
 		{
-			threadpara[i].tgt_sentences.push_back(tgt_sentences[i]);
+			threadpara[t].tgt_sentences.push_back(tgt_sentences[i]);
 		}
 
+		threadpara[t].batch_size = sentence_branch;
 		src_ind += src_sentence_per_thread;
 		tgt_ind += tgt_sentence_per_thread;
 	}
+	
 	threadpara[thread_num - 1].init(src_skipgram_model, tgt_skipgram_model, 
 									src_te_model, tgt_te_model,
 									src_word_vec, tgt_word_vec,
@@ -260,7 +277,7 @@ void trainWordVec(Config conf, SkipGram& src_skipgram_model, SkipGram& tgt_skipg
 	}
 
 	src_raw_in.close();
-	delete threadpara;
+	delete[] threadpara;
 	delete pt;
 }
 
