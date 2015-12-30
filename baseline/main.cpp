@@ -281,9 +281,14 @@ void trainWordVec(Config conf, SkipGram& src_skipgram_model, SkipGram& tgt_skipg
 	delete pt;
 }
 
-int main()
+int main(int argc, char* argv[])
 {
-	Config conf("Config.conf");
+	if (argc != 2)
+	{
+		cerr << "Usage: ./te Config.conf" << endl;
+	}
+
+	Config conf(argv[1]);
 
 	//get config
 	string src_vocab_file = conf.get_para("src_vocab_file");
