@@ -41,12 +41,17 @@ Author kh
 //
 //
 
+
+/*
+train a pair of sentence
+return d_word_emb, d_W
+*/
 vector<MatrixXd> trainOneSentence(SkipGram& skipgram_model, TE& te_model, WordVec src_word_vec, WordVec& tgt_word_vec, string sentence, int window_size, double learning_rate, double lambda)
 {
-
 	//derivation items
 	MatrixXd s_dword_emb = MatrixXd::Zero(tgt_word_vec.word_emb.rows(), tgt_word_vec.word_emb.cols());
 	MatrixXd s_dW = MatrixXd::Zero(skipgram_model.W.rows(), skipgram_model.W.cols());
+	double f_score = 0;
 	double start_clock, end_clock;
 
 	vector<string> words = splitBySpace(sentence);
@@ -78,10 +83,12 @@ vector<MatrixXd> trainOneSentence(SkipGram& skipgram_model, TE& te_model, WordVe
 		end_clock = clock();
 		//cout << "The time of do a skip-gram backward is " << (end_clock-start_clock)/CLOCKS_PER_SEC << endl;
 
+		f_score += skipgram_model.forward(tgt_word_vec, x, c);
 		s_dword_emb += derivations[0];
 		s_dW += derivations[1];
 	}
 
+	f_score /= words.size();
 	start_clock = clock();
 	vector<MatrixXd> derivations = te_model.backward(src_word_vec, tgt_word_vec);
 	end_clock = clock();
@@ -94,6 +101,9 @@ vector<MatrixXd> trainOneSentence(SkipGram& skipgram_model, TE& te_model, WordVe
 	}
 
 	s_dword_emb += (lambda*te_dword_emb);
+	f_score += te_model.forward(src_word_vec, tgt_word_vec);
+
+	cout << "score: " << f_score << endl;
 
 	derivations.clear();
 	derivations.push_back(s_dword_emb);
@@ -123,7 +133,7 @@ static void* deepThread(void* arg)
 		start_clock = clock();
 		gt->src_dword_emb += derivations[0];
 		gt->src_dW += derivations[1];
-		gt->src_word_count += gt->src_sentences[cur_src_sen].size();
+		gt->src_word_count += splitBySpace(gt->src_sentences[cur_src_sen]).size();
 		end_clock = clock();
 		//cout << "The time of update is " << (end_clock-start_clock)/CLOCKS_PER_SEC << endl;
 
@@ -135,7 +145,7 @@ static void* deepThread(void* arg)
 
 		gt->tgt_dword_emb += derivations[0];
 		gt->tgt_dW += derivations[1];
-		gt->tgt_word_count += gt->tgt_sentences[cur_tgt_sen].size();
+		gt->tgt_word_count += splitBySpace(gt->tgt_sentences[cur_tgt_sen]).size();
 	}
 
 	pthread_exit(NULL);

@@ -3,6 +3,7 @@
 
 #include "Utils.h"
 #include "WordVec.h"
+#include "limits"
 
 class SkipGram
 {

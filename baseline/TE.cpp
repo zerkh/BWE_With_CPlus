@@ -74,7 +74,7 @@ double TE::forward(WordVec src_word_vec, WordVec tgt_word_vec)
 {
 	MatrixXd error_mat = tgt_word_vec.word_emb - alignTable*src_word_vec.word_emb;
 
-	double s_error = error_mat.squaredNorm();
+	double s_error = error_mat.sqrt() / 2;
 
 	return s_error;
 }

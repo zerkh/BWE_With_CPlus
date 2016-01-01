@@ -55,6 +55,11 @@ vector<MatrixXd> SkipGram::backward(WordVec& word_vec, int x, RowVectorXi c)
 
 	double sum = U.sum();
 
+	if (!finite(sum))
+	{
+		sum = numeric_limits<double>::max();
+	}
+
 	for (int i = 0; i < c.cols(); i++)
 	{
 		probs.push_back(U(c(i)) / sum);
