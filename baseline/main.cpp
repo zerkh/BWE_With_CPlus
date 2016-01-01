@@ -133,9 +133,12 @@ static void* deepThread(void* arg)
 
 		derivations.clear();
 
+		start_clock = clock();
 		derivations = trainOneSentence(gt->tgt_skipgram_model, gt->tgt_te_model,
 			gt->src_word_vec, gt->tgt_word_vec, gt->tgt_sentences[cur_tgt_sen],
 			gt->window_size, gt->learning_rate, gt->lambda);
+		end_clock = clock();
+		cout << "The time of train a target sentence is " << (end_clock - start_clock) / CLOCKS_PER_SEC << endl;
 
 		gt->tgt_dword_emb += derivations[0];
 		gt->tgt_dW += derivations[1];
