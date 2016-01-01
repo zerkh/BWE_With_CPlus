@@ -112,6 +112,79 @@ public:
 		this->window_size = window_size;
 	}
 
+	double evaluate()
+	{
+		double f_score = 0;
+
+		f_score += src_te_model.forward(src_word_vec, tgt_word_vec);
+		f_score += tgt_te_model.forward(tgt_word_vec, src_word_vec);
+
+		vector<string> src_words = splitBySpace(src_sentences[0]);
+		vector<string> tgt_words = splitBySpace(tgt_sentences[0]);
+
+		vector<int> pos_of_word;
+
+		for (int w = 0; w < tgt_words.size(); w++)
+		{
+			pos_of_word.push_back(tgt_word_vec.m_word_id[tgt_words[w]]);
+		}
+
+		//get global context
+		RowVectorXi x_g(tgt_words.size());
+		for (int i = 0; i < tgt_words.size(); i++)
+		{
+			x_g(i) = pos_of_word[i];
+		}
+
+		double tmp_score = 0;
+
+		//train one sentence
+		for (int w = 0; w < tgt_words.size(); w++)
+		{
+			RowVectorXi c = getWindow(tgt_word_vec, tgt_sentences[0], window_size, w);
+
+			int x = c(window_size - 1);
+			c = c.head(window_size - 1);
+
+			tmp_score += tgt_skipgram_model.forward(tgt_word_vec, x, c);
+		}
+
+		tmp_score /= tgt_words.size();
+		f_score += tmp_score;
+
+		pos_of_word.clear();
+
+		for (int w = 0; w < src_words.size(); w++)
+		{
+			pos_of_word.push_back(src_word_vec.m_word_id[src_words[w]]);
+		}
+
+		//get global context
+		RowVectorXi x_g(src_words.size());
+		for (int i = 0; i < src_words.size(); i++)
+		{
+			x_g(i) = pos_of_word[i];
+		}
+
+		tmp_score = 0;
+
+		//train one sentence
+		for (int w = 0; w < src_words.size(); w++)
+		{
+			RowVectorXi c = getWindow(src_word_vec, src_sentences[0], window_size, w);
+
+			int x = c(window_size - 1);
+			c = c.head(window_size - 1);
+
+			tmp_score += src_skipgram_model.forward(src_word_vec, x, c);
+		}
+
+		tmp_score /= src_words.size();
+		f_score += tmp_score;
+
+		return f_score;
+	}
+
 	void update(SkipGram src_skipgram_model, SkipGram tgt_skipgram_model,
 				TE src_te_model, TE tgt_te_model,
 				WordVec src_word_vec, WordVec tgt_word_vec)

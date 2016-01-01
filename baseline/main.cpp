@@ -51,7 +51,6 @@ vector<MatrixXd> trainOneSentence(SkipGram& skipgram_model, TE& te_model, WordVe
 	//derivation items
 	MatrixXd s_dword_emb = MatrixXd::Zero(tgt_word_vec.word_emb.rows(), tgt_word_vec.word_emb.cols());
 	MatrixXd s_dW = MatrixXd::Zero(skipgram_model.W.rows(), skipgram_model.W.cols());
-	double f_score = 0;
 	double start_clock, end_clock;
 
 	vector<string> words = splitBySpace(sentence);
@@ -83,12 +82,10 @@ vector<MatrixXd> trainOneSentence(SkipGram& skipgram_model, TE& te_model, WordVe
 		end_clock = clock();
 		//cout << "The time of do a skip-gram backward is " << (end_clock-start_clock)/CLOCKS_PER_SEC << endl;
 
-		f_score += skipgram_model.forward(tgt_word_vec, x, c);
 		s_dword_emb += derivations[0];
 		s_dW += derivations[1];
 	}
 
-	f_score /= words.size();
 	start_clock = clock();
 	vector<MatrixXd> derivations = te_model.backward(src_word_vec, tgt_word_vec);
 	end_clock = clock();
@@ -101,9 +98,6 @@ vector<MatrixXd> trainOneSentence(SkipGram& skipgram_model, TE& te_model, WordVe
 	}
 
 	s_dword_emb += (lambda*te_dword_emb);
-	f_score += te_model.forward(src_word_vec, tgt_word_vec);
-
-	cout << "score: " << f_score << endl;
 
 	derivations.clear();
 	derivations.push_back(s_dword_emb);
@@ -266,6 +260,8 @@ void trainWordVec(Config conf, SkipGram& src_skipgram_model, SkipGram& tgt_skipg
 			s_tgt_dword_emb += threadpara[t].tgt_dword_emb;
 			s_tgt_dW += threadpara[t].tgt_dW;
 			tgt_word_count += threadpara[t].tgt_word_count;
+
+			cout << "score: " << threadpara[t].evaluate() << endl;
 
 			threadpara[t].clear();
 		}
