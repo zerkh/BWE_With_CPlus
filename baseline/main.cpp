@@ -114,8 +114,8 @@ static void* deepThread(void* arg)
 	srand(time(0));
 	for (int b = 0; b < gt->batch_size; b++)
 	{
-		int cur_src_sen = rand() / gt->src_sentences.size();
-		int cur_tgt_sen = rand() / gt->tgt_sentences.size();
+		int cur_src_sen = rand() % gt->src_sentences.size();
+		int cur_tgt_sen = rand() % gt->tgt_sentences.size();
 
 		start_clock = clock();
 		vector<MatrixXd> derivations = trainOneSentence(gt->src_skipgram_model, gt->src_te_model, 
