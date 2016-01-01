@@ -116,8 +116,8 @@ public:
 	{
 		double f_score = 0;
 
-		f_score += src_te_model.forward(src_word_vec, tgt_word_vec);
-		f_score += tgt_te_model.forward(tgt_word_vec, src_word_vec);
+		f_score += src_te_model.forward(tgt_word_vec, src_word_vec);
+		f_score += tgt_te_model.forward(src_word_vec, tgt_word_vec);
 
 		vector<string> src_words = splitBySpace(src_sentences[0]);
 		vector<string> tgt_words = splitBySpace(tgt_sentences[0]);
@@ -160,7 +160,7 @@ public:
 		}
 
 		//get global context
-		RowVectorXi x_g(src_words.size());
+		x_g = RowVectorXi(src_words.size());
 		for (int i = 0; i < src_words.size(); i++)
 		{
 			x_g(i) = pos_of_word[i];

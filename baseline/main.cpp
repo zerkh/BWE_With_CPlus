@@ -86,6 +86,7 @@ vector<MatrixXd> trainOneSentence(SkipGram& skipgram_model, TE& te_model, WordVe
 		s_dW += derivations[1];
 	}
 
+	
 	start_clock = clock();
 	vector<MatrixXd> derivations = te_model.backward(src_word_vec, tgt_word_vec);
 	end_clock = clock();
@@ -223,7 +224,7 @@ void trainWordVec(Config conf, SkipGram& src_skipgram_model, SkipGram& tgt_skipg
 									src_te_model, tgt_te_model,
 									src_word_vec, tgt_word_vec,
 									tgt_word_vec.word_dim, window_size, learning_rate, lambda);
-	threadpara[thread_num - 1].batch_size = branch_size - thread_num*sentence_branch;
+	threadpara[thread_num - 1].batch_size = branch_size - (thread_num-1)*sentence_branch;
 	for (int i = src_ind; i < src_sentences.size(); i++)
 	{
 		threadpara[thread_num - 1].src_sentences.push_back(src_sentences[i]);
